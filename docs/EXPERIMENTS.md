@@ -1,0 +1,57 @@
+# Experiment Log & Findings
+
+Updated: 2026-11-21. All retrieval evaluations use [`harness/eval_suite.py`](../harness/eval_suite.py) on the `core` suite (`beir:arguana`, `beir:nfcorpus`, `beir:scifact`, `coir:cosqa`, `coir:stackoverflow-qa`) at `max_len=256`.
+
+---
+
+## 1. Baseline Leaderboard (`v0`, `core` suite, nDCG@10)
+
+| Model | `beir:arguana` | `beir:nfcorpus` | `beir:scifact` | `coir:cosqa` | `coir:stackoverflow-qa` | **General** | **Code** | **Overall** | Avg Q/D terms | Lat (ms)* |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `hf:naver/splade-code-06B` (600M) | **0.5963** | 0.2539 | 0.6645 | **0.3605** | **0.9210** | 0.5049 | **0.6408** | **0.5592** | 1666 / 1614 | 47.8 |
+| `hf:naver/splade-v3` (110M) | 0.5128 | **0.3576** | **0.7096** | 0.2257 | 0.6570 | **0.5267** | 0.4414 | 0.4925 | 138 / 247 | 13.6 |
+| `tfidf` (sublinear, l2) | 0.5239 | 0.3023 | 0.6286 | 0.1299 | 0.7579 | 0.4849 | 0.4439 | 0.4685 | 43 / 90 | 0.3 |
+| `bm25` (`bm25s`, k1=1.5, b=0.75) | 0.4860 | 0.3064 | 0.6617 | 0.1426 | 0.6954 | 0.4847 | 0.4190 | 0.4584 | — | — |
+| `hf:Cdn13/ettin-splade-stackoverflowqa` (17M) | 0.4860 | 0.1881 | 0.5548 | 0.1966 | 0.7417 | 0.4096 | 0.4691 | 0.4334 | 1534 / 1434 | 9.9 |
+| `crouton-base` v0 (50M, MS MARCO InfoNCE) | 0.2880 | 0.2483 | 0.5079 | 0.0980 | 0.4495 | 0.3481 | 0.2738 | 0.3184 | 124 / 248 | 20.1 |
+| `shortcake-base` v0 (53M, CSN-py InfoNCE) | 0.1620 | 0.1158 | 0.3181 | 0.2145 | 0.5163 | 0.1986 | 0.3654 | 0.2653 | 120 / 208 | 18.5 |
+
+*\*Batch-1 query latency on L4 GPU for neural models, CPU for `tfidf`.*
+
+### Key baseline observations
+- **Two complementary ceilings:** `splade-code-06B` dominates Code (`0.6408`) and `arguana` (`0.5963`) but is dense (`1666/1614` terms); `splade-v3` dominates General (`0.5267`) at **6.5× sparser vectors** (`138/247`).
+- **Sparsity vs. generalization niche:** `ettin-17m` hits `0.7417` on `stackoverflow-qa` (its training domain) but drops to `0.4096` General (`0.1881` on `nfcorpus`) at `1534/1434` active terms.
+- **Why both `stackoverflow-qa` and `cosqa` matter:** `stackoverflow-qa` has strong lexical overlap (`tfidf` gets `0.7579`), while `cosqa` (web queries → Python code) breaks lexical baselines (`0.13–0.14`) and directly rewards neural lexical expansion.
+
+---
+
+## 2. v1 Ablation: Bug Fixes Only (Same Single-Domain Data & Step Budgets)
+
+| Model | `arguana` | `nfcorpus` | `scifact` | `cosqa` | `stackoverflow-qa` | **General** | **Code** | **Overall** | Avg Q/D |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Shortcake v0 (`temp=0.05`) | 0.1620 | 0.1158 | 0.3181 | 0.2145 | 0.5163 | 0.1986 | 0.3654 | 0.2653 | 120 / 208 |
+| **Shortcake v1 (`temp=1.0`)** | 0.1256 | **0.1425** | **0.3902** | **0.2628** | **0.5312** | **0.2194** | **0.3970** | **0.2905** | 470 / 738 |
+| **Crouton v0 (`l1`, 300 MNTP)** | **0.2880** | **0.2483** | **0.5079** | **0.0980** | **0.4495** | **0.3481** | **0.2738** | **0.3184** | 124 / 248 |
+| Crouton v1 (`flops`, 1000 MNTP) | 0.2704 | 0.2312 | 0.4645 | 0.0346 | 0.3826 | 0.3220 | 0.2086 | 0.2767 | 166 / 282 |
+
+### Findings from v1
+1. **Shortcake `temperature=0.05 → 1.0` was a major win (+0.0252 Overall, +0.0483 on `cosqa`):** Dividing unbounded SPLADE dot products by `0.05` had multiplied logits by 20× and caused premature InfoNCE saturation. At `temp=1.0`, Shortcake v1 jumped from `0.7375 → 0.7767` on its held-out CSN-py 1k pool and **beat both `naver/splade-v3` (`0.2257`) and `ettin-17m` (`0.1966`) on `coir:cosqa` (`0.2628`)**. Because its `lambda_q=3e-4, lambda_d=1e-4` were tuned for `temp=0.05`, active terms expanded to `470/738` — fixed in v2 by raising reg to L1 `0.015` / FLOPS `0.04`.
+2. **Crouton `l1` → `flops` at `lambda_q=0.05` regressed (-0.0417 Overall):** FLOPS squares the batch mean of each vocab term, making it ~8–16× looser than L1 at the same weight (`l0_q` rose from ~13 to ~100 during training). On 100k MS MARCO triplets (3.2 epochs), this caused memorization (`rank` loss dropped to `0.21–0.35`) and noisy over-expansion out of domain.
+3. **Design rule for v2/v3:** Use **L1 regularization on queries (`lambda_q ≈ 0.015`)** + **FLOPS regularization on documents (`lambda_d ≈ 0.04`)**, matching the original SPLADE formulation.
+
+---
+
+## 3. Tokenizer Investigation (`docs/TOKENISATION.md`)
+
+- Word-initial code fragmentation in `crouton` v1.0.0 (`18–20/102` code terms) was caused by training the tokenizer on prose only (`fineweb-edu` + `cosmopedia`), **not** by `wp-bpe-ppig` scoring.
+- Adding 30% Python code to the tokenizer corpus (Experiment E) cut code fragmentation nearly in half (`18 → 10/102`) and boosted code compression by **+20.7%** (`3.448 → 4.159` B/tok) for only a 1.5% prose cost.
+- Unmodified **`wp-bpe-ppig`** beat `pmi_floor` (negligible difference) and outperformed plain frequency BPE on downstream LM BPB (`2.522` vs. `2.549`), Morph F1, Identifier F1, and Exp E code fragmentation (`10` vs. `11`).
+- Decision: stick with default `wp-bpe-ppig`, retrain the `crouton` v2.0.0 model family (`tiny`, `small`, `base`) on the 70/30 tokenizer, and evaluate those new backbones as **v4** after the `v0 → v1 → v2 → v3` SPLADE ablation ladder.
+
+---
+
+## 4. Roadmap (`v2 → v3 → v4`)
+
+- **v2 (Scale + Mixed Domain, InfoNCE only):** Train both `crouton-base` and `shortcake-base` via [`train/train_splade.py`](../train/train_splade.py) on **200k mixed General + Code triplets** (`120k` MS MARCO + `40k` StackOverflow-QA + `40k` CodeSearchNet-python), `10,000` steps, `temperature=1.0`, `query_reg_type=l1 (0.015)`, `lambda_d=0.04` (FLOPS).
+- **v3 (Dual-Teacher Margin-MSE Distillation):** Score the exact same 200k triplets via [`train/score_teacher_margins.py`](../train/score_teacher_margins.py) (`naver/splade-v3` for General, `naver/splade-code-06B` for Code, at `max_len=256`) and retrain with Margin-MSE + optional Shortcake `--echo` embeddings and smaller tiers (`crouton-tiny` 14M, `shortcake-small` 23M vs. `ettin-17m`).
+- **v4 (Crouton v2.0.0 Backbones):** Apply the winning v3 recipe to the newly pretrained 70/30-tokenizer `crouton` v2.0.0 family.

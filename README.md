@@ -10,6 +10,7 @@ Document retrieval and sparse neural retrieval (SPLADE) benchmark and distillati
 - [`train/score_teacher_margins.py`](train/score_teacher_margins.py) — dual-teacher Margin-MSE scorer (`naver/splade-v3` for general, `naver/splade-code-06B` for code, at `max_len=256`).
 - [`train/train_splade.py`](train/train_splade.py) — unified v2 (InfoNCE) and v3 (Margin-MSE distillation) SPLADE trainer for `crouton` and `shortcake` (including optional `--echo` embeddings for Shortcake).
 - [`harness/eval_coir.py`](harness/eval_coir.py) — original single-task CoIR runner (superseded by `eval_suite.py`).
+- [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md) — full baseline leaderboard, v0 → v1 ablation findings, tokenizer conclusions, and v2 → v4 roadmap.
 - [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — comparison protocol (CoIR StackOverflow-QA, matched to `pes-innovation-lab/semantic-search-code-docs`), reference numbers, and experiment roadmap.
 - [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md) — initial BEIR SciFact and CodeSearchNet baseline measurements and ranked SPLADE improvement plan for `crouton` and `shortcake`.
 - [`docs/TOKENISATION.md`](docs/TOKENISATION.md) — investigation of `wp-bpe-ppig` vs. frequency BPE on prose and 70/30 prose+code corpora.

@@ -135,9 +135,9 @@ class CroutonAdapter:
             seqs.append(ids if ids else [self.pad_id])
         return _pad(seqs, self.pad_id)
 
-    def forward(self, ids: torch.Tensor, mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, ids: torch.Tensor, mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         out = self.model(ids, attention_mask=mask)
-        return out.sparse_vector, out.flops_loss
+        return out.sparse_vector, out.flops_loss, out.l1_loss
 
     def warmup(self, loader: DataLoader, device: torch.device, amp_ctx, steps: int, lr: float) -> None:
         if steps > 0 and self.bidirectional:
@@ -184,9 +184,11 @@ class ShortcakeAdapter:
             mask[i, n : 2 * n] = True
         return ids, mask
 
-    def forward(self, ids: torch.Tensor, mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, ids: torch.Tensor, mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         out = self.model(ids, attention_mask=mask)
-        return out["sparse_vector"], out["flops_loss"]
+        sv = out["sparse_vector"]
+        l1 = sv.float().sum(dim=-1).mean()
+        return sv, out["flops_loss"], l1
 
     def warmup(self, loader: DataLoader, device: torch.device, amp_ctx, steps: int, lr: float) -> None:
         return
@@ -222,9 +224,10 @@ def main() -> None:
     ap.add_argument("--max-query-len", type=int, default=96)
     ap.add_argument("--max-doc-len", type=int, default=256)
     ap.add_argument("--lr", type=float, default=4e-5)
-    ap.add_argument("--lambda-q", type=float, default=0.03)
-    ap.add_argument("--lambda-d", type=float, default=0.02)
-    ap.add_argument("--reg-warmup-steps", type=int, default=2500)
+    ap.add_argument("--query-reg-type", choices=["l1", "flops"], default="l1")
+    ap.add_argument("--lambda-q", type=float, default=0.015)
+    ap.add_argument("--lambda-d", type=float, default=0.04)
+    ap.add_argument("--reg-warmup-steps", type=int, default=2000)
     ap.add_argument("--temperature", type=float, default=1.0)
     ap.add_argument("--margin-mse-weight", type=float, default=0.0, help="0.0 = v2 (InfoNCE only); >0 = v3 (Margin-MSE distillation)")
     ap.add_argument("--infonce-weight", type=float, default=1.0)
@@ -301,9 +304,9 @@ def main() -> None:
             n_ids, n_mask = batch["n_ids"].to(device), batch["n_mask"].to(device)
 
             with amp_ctx:
-                q_vec, q_flops = adapter.forward(q_ids, q_mask)
-                p_vec, p_flops = adapter.forward(p_ids, p_mask)
-                n_vec, n_flops = adapter.forward(n_ids, n_mask)
+                q_vec, q_flops, q_l1 = adapter.forward(q_ids, q_mask)
+                p_vec, p_flops, _ = adapter.forward(p_ids, p_mask)
+                n_vec, n_flops, _ = adapter.forward(n_ids, n_mask)
 
                 rank = torch.tensor(0.0, device=device)
                 if a.infonce_weight > 0.0:
@@ -314,7 +317,8 @@ def main() -> None:
                     )
                     rank = rank + a.margin_mse_weight * mmse
 
-                reg = lq * q_flops + ld * 0.5 * (p_flops + n_flops)
+                q_reg = q_l1 if a.query_reg_type == "l1" else q_flops
+                reg = lq * q_reg + ld * 0.5 * (p_flops + n_flops)
                 loss = (rank + reg) / a.grad_accum
 
             loss.backward()
