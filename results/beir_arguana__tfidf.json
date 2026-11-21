@@ -1,0 +1,27 @@
+{
+  "model": "tfidf",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": false,
+  "index_build_s": 0.6,
+  "params": 0,
+  "vocab_size": 34293,
+  "avg_doc_terms": 103.41030666359235,
+  "avg_query_terms": 115.19700214132763,
+  "index_nnz": 896981,
+  "metrics": {
+    "recall@5": 0.6602426837972877,
+    "recall@10": 0.8122769450392576,
+    "recall@100": 0.9778729478943612,
+    "mrr@10": 0.43338431732436017,
+    "ndcg@10": 0.523912746531607,
+    "precision@10": 0.08122769450392577
+  },
+  "query_latency_ms_bs1": 0.41,
+  "wall_s": 3.1
+}

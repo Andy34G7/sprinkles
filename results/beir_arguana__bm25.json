@@ -1,0 +1,20 @@
+{
+  "model": "bm25",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": false,
+  "metrics": {
+    "recall@5": 0.6088508208422555,
+    "recall@10": 0.76802284082798,
+    "recall@100": 0.9628836545324768,
+    "mrr@10": 0.3980155897714784,
+    "ndcg@10": 0.4860296058024673,
+    "precision@10": 0.076802284082798
+  },
+  "wall_s": 20.5
+}

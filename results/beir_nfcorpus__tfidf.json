@@ -1,0 +1,27 @@
+{
+  "model": "tfidf",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": false,
+  "index_build_s": 0.4,
+  "params": 0,
+  "vocab_size": 26417,
+  "avg_doc_terms": 126.23754472887421,
+  "avg_query_terms": 3.065015479876161,
+  "index_nnz": 458621,
+  "metrics": {
+    "recall@5": 0.11875792087349124,
+    "recall@10": 0.14624452192809378,
+    "recall@100": 0.23958209443944817,
+    "mrr@10": 0.5038478549314462,
+    "ndcg@10": 0.30230675793734646,
+    "precision@10": 0.2157894736842106
+  },
+  "query_latency_ms_bs1": 0.29,
+  "wall_s": 0.5
+}

@@ -1,0 +1,27 @@
+{
+  "model": "tfidf",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": false,
+  "index_build_s": 0.3,
+  "params": 0,
+  "vocab_size": 22329,
+  "avg_doc_terms": 21.590856144437975,
+  "avg_query_terms": 6.082,
+  "index_nnz": 444858,
+  "metrics": {
+    "recall@5": 0.152,
+    "recall@10": 0.23,
+    "recall@100": 0.57,
+    "mrr@10": 0.09991666666666667,
+    "ndcg@10": 0.1299055768884462,
+    "precision@10": 0.023
+  },
+  "query_latency_ms_bs1": 0.3,
+  "wall_s": 0.5
+}

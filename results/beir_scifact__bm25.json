@@ -1,0 +1,20 @@
+{
+  "model": "bm25",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": false,
+  "metrics": {
+    "recall@5": 0.7192777777777778,
+    "recall@10": 0.7739444444444444,
+    "recall@100": 0.8758888888888888,
+    "mrr@10": 0.6312301587301588,
+    "ndcg@10": 0.6616913885341652,
+    "precision@10": 0.086
+  },
+  "wall_s": 33.0
+}

@@ -1,0 +1,20 @@
+{
+  "model": "bm25",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": false,
+  "metrics": {
+    "recall@5": 0.178,
+    "recall@10": 0.26,
+    "recall@100": 0.564,
+    "mrr@10": 0.10667698412698413,
+    "ndcg@10": 0.14260110163453266,
+    "precision@10": 0.026000000000000002
+  },
+  "wall_s": 1.5
+}

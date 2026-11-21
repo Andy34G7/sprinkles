@@ -1,0 +1,27 @@
+{
+  "model": "tfidf",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": false,
+  "index_build_s": 0.7,
+  "params": 0,
+  "vocab_size": 35899,
+  "avg_doc_terms": 118.3295388770982,
+  "avg_query_terms": 11.616666666666667,
+  "index_nnz": 613302,
+  "metrics": {
+    "recall@5": 0.7318888888888889,
+    "recall@10": 0.7735000000000001,
+    "recall@100": 0.8915555555555557,
+    "mrr@10": 0.5896653439153439,
+    "ndcg@10": 0.6285531214812363,
+    "precision@10": 0.08566666666666665
+  },
+  "query_latency_ms_bs1": 0.3,
+  "wall_s": 0.9
+}
