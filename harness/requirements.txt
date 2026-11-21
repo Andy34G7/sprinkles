@@ -1,0 +1,10 @@
+# Pinned to the versions already in ~/projects/tokenisers/.venv so uv hardlinks from its cache.
+torch==2.14.1  # local: CPU wheel via --index-url https://download.pytorch.org/whl/cpu
+transformers==5.21.0
+datasets
+sentence-transformers  # SparseEncoder, same loader the reference repo uses (handles splade-code-06B)
+ranx                   # same metric implementation as the reference repo
+scipy
+scikit-learn           # reference repo's TF-IDF "BM25 approximation"
+bm25s                  # real BM25 baseline
+tokenizers             # shortcake tokenizer

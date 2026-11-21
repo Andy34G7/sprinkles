@@ -1,0 +1,19 @@
+{
+  "model": "bm25",
+  "task": "stackoverflow-qa",
+  "split": "test",
+  "n_queries": 50,
+  "n_docs": 2000,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": true,
+  "metrics": {
+    "recall@5": 0.88,
+    "recall@10": 0.92,
+    "recall@100": 0.96,
+    "mrr@10": 0.7958333333333334,
+    "ndcg@10": 0.8258976937436691,
+    "precision@10": 0.092
+  },
+  "wall_s": 30.4
+}

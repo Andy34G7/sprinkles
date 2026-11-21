@@ -1,0 +1,25 @@
+{
+  "model": "hf:Cdn13/ettin-splade-stackoverflowqa",
+  "task": "stackoverflow-qa",
+  "split": "test",
+  "n_queries": 50,
+  "n_docs": 2000,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": true,
+  "index_build_s": 184.3,
+  "params": 16913600,
+  "avg_doc_terms": 1395.488,
+  "avg_query_terms": 1339.72,
+  "index_nnz": 2790976,
+  "metrics": {
+    "recall@5": 0.96,
+    "recall@10": 0.96,
+    "recall@100": 0.98,
+    "mrr@10": 0.8766666666666666,
+    "ndcg@10": 0.8983301655000041,
+    "precision@10": 0.09599999999999997
+  },
+  "query_latency_ms_bs1": 88.59405404073186,
+  "wall_s": 192.7
+}

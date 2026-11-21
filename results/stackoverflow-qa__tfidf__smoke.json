@@ -1,0 +1,25 @@
+{
+  "model": "tfidf",
+  "task": "stackoverflow-qa",
+  "split": "test",
+  "n_queries": 50,
+  "n_docs": 2000,
+  "max_len": 256,
+  "device": "cpu",
+  "limited": true,
+  "index_build_s": 0.4,
+  "params": 0,
+  "avg_doc_terms": 78.178,
+  "avg_query_terms": 68.3,
+  "index_nnz": 156356,
+  "metrics": {
+    "recall@5": 0.9,
+    "recall@10": 0.94,
+    "recall@100": 0.98,
+    "mrr@10": 0.8247222222222222,
+    "ndcg@10": 0.8528042777347108,
+    "precision@10": 0.09399999999999999
+  },
+  "query_latency_ms_bs1": 0.4402221005875617,
+  "wall_s": 0.5
+}

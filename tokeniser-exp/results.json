@@ -1,0 +1,1111 @@
+{
+  "shipped": {
+    "code_terms_fragmented": 20,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "python",
+        [
+          "\u0120p",
+          "ython"
+        ]
+      ],
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Numpy",
+        [
+          "\u0120N",
+          "umpy"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.8072318543059819,
+    "prose_fragmented": 0.03195186894042562,
+    "bytes_per_token_prose": 4.761379518145966,
+    "bytes_per_token_code": 3.4445528874010174,
+    "vocab_used_heldout": 30163,
+    "vocab_size": 32768
+  },
+  "base": {
+    "code_terms_fragmented": 18,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Numpy",
+        [
+          "\u0120N",
+          "umpy"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "ql"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.8102400455293807,
+    "prose_fragmented": 0.0319315433240513,
+    "bytes_per_token_prose": 4.767528424999527,
+    "bytes_per_token_code": 3.4475003415010064,
+    "vocab_used_heldout": 30384,
+    "vocab_size": 32768,
+    "train_s": 33.7,
+    "matches_shipped_vocab": false
+  },
+  "C0.5": {
+    "code_terms_fragmented": 18,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Numpy",
+        [
+          "\u0120N",
+          "umpy"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "ql"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.8102400455293807,
+    "prose_fragmented": 0.0319315433240513,
+    "bytes_per_token_prose": 4.774238735934027,
+    "bytes_per_token_code": 3.471713294245588,
+    "vocab_used_heldout": 30389,
+    "vocab_size": 32768,
+    "train_s": 38.6
+  },
+  "C1": {
+    "code_terms_fragmented": 18,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "as",
+          "cript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "as",
+          "cript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Numpy",
+        [
+          "\u0120N",
+          "umpy"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "q",
+          "l"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.810260371145755,
+    "prose_fragmented": 0.0319315433240513,
+    "bytes_per_token_prose": 4.775055891617651,
+    "bytes_per_token_code": 3.475804471284335,
+    "vocab_used_heldout": 30381,
+    "vocab_size": 32768,
+    "train_s": 38.5
+  },
+  "C2": {
+    "code_terms_fragmented": 20,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "python",
+        [
+          "\u0120p",
+          "ython"
+        ]
+      ],
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Numpy",
+        [
+          "\u0120N",
+          "umpy"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "tt",
+          "p"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.8063375271855119,
+    "prose_fragmented": 0.033374662086627774,
+    "bytes_per_token_prose": 4.774739110777364,
+    "bytes_per_token_code": 3.49535057221214,
+    "vocab_used_heldout": 30414,
+    "vocab_size": 32768,
+    "train_s": 36.2
+  },
+  "D": {
+    "code_terms_fragmented": 17,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "ql"
+        ]
+      ],
+      [
+        "github",
+        [
+          "\u0120g",
+          "ith",
+          "ub"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.8112563263480965,
+    "prose_fragmented": 0.03225675318604037,
+    "bytes_per_token_prose": 4.738126165199737,
+    "bytes_per_token_code": 3.386074275089455,
+    "vocab_used_heldout": 30317,
+    "vocab_size": 32768,
+    "train_s": 39.4
+  },
+  "C1+D": {
+    "code_terms_fragmented": 17,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "as",
+          "cript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "as",
+          "cript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "q",
+          "l"
+        ]
+      ],
+      [
+        "github",
+        [
+          "\u0120g",
+          "ith",
+          "ub"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.8114595825118397,
+    "prose_fragmented": 0.03223642756966605,
+    "bytes_per_token_prose": 4.74674189971009,
+    "bytes_per_token_code": 3.4048251776732443,
+    "vocab_used_heldout": 30321,
+    "vocab_size": 32768,
+    "train_s": 44.0
+  },
+  "freq-bpe": {
+    "code_terms_fragmented": 17,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "av",
+          "asc",
+          "ript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "json",
+        [
+          "\u0120j",
+          "son"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Dict",
+        [
+          "\u0120D",
+          "ict"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "tt",
+          "p"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "j",
+          "ang",
+          "o"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "ql"
+        ]
+      ],
+      [
+        "github",
+        [
+          "\u0120g",
+          "ith",
+          "ub"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.8107888371714872,
+    "prose_fragmented": 0.027805443200065044,
+    "bytes_per_token_prose": 4.794260732787936,
+    "bytes_per_token_code": 3.538897671126868,
+    "vocab_used_heldout": 31176,
+    "vocab_size": 32768,
+    "train_s": 48.0
+  },
+  "E_base": {
+    "code_terms_fragmented": 10,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "avas",
+          "cript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "avas",
+          "cript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "jango"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "jango"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "ql"
+        ]
+      ],
+      [
+        "Github",
+        [
+          "\u0120G",
+          "ithub"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.7838777210918921,
+    "prose_fragmented": 0.03683001687026159,
+    "bytes_per_token_prose": 4.694814904955638,
+    "bytes_per_token_code": 4.159183838459218,
+    "vocab_used_heldout": 29005,
+    "vocab_size": 32768,
+    "train_s": 52.3
+  },
+  "E_C1": {
+    "code_terms_fragmented": 10,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "avas",
+          "cript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "avas",
+          "cript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "jango"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "jango"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "ql"
+        ]
+      ],
+      [
+        "Github",
+        [
+          "\u0120G",
+          "ithub"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.7828614402731763,
+    "prose_fragmented": 0.035000711396573105,
+    "bytes_per_token_prose": 4.700738800674202,
+    "bytes_per_token_code": 4.165316484471218,
+    "vocab_used_heldout": 29007,
+    "vocab_size": 32768,
+    "train_s": 56.4
+  },
+  "E_freq-bpe": {
+    "code_terms_fragmented": 11,
+    "code_terms_total": 102,
+    "code_examples": [
+      [
+        "javascript",
+        [
+          "\u0120j",
+          "avas",
+          "cript"
+        ]
+      ],
+      [
+        "Javascript",
+        [
+          "\u0120J",
+          "avas",
+          "cript"
+        ]
+      ],
+      [
+        "java",
+        [
+          "\u0120j",
+          "ava"
+        ]
+      ],
+      [
+        "Json",
+        [
+          "\u0120J",
+          "son"
+        ]
+      ],
+      [
+        "Http",
+        [
+          "\u0120H",
+          "ttp"
+        ]
+      ],
+      [
+        "Socket",
+        [
+          "\u0120S",
+          "ocket"
+        ]
+      ],
+      [
+        "django",
+        [
+          "\u0120d",
+          "jango"
+        ]
+      ],
+      [
+        "Django",
+        [
+          "\u0120D",
+          "jango"
+        ]
+      ],
+      [
+        "Sql",
+        [
+          "\u0120S",
+          "ql"
+        ]
+      ],
+      [
+        "Github",
+        [
+          "\u0120G",
+          "ithub"
+        ]
+      ],
+      [
+        "Pointer",
+        [
+          "\u0120P",
+          "ointer"
+        ]
+      ]
+    ],
+    "prose_whole_word": 0.7813573446614769,
+    "prose_fragmented": 0.0291062826480213,
+    "bytes_per_token_prose": 4.718998301337167,
+    "bytes_per_token_code": 4.195279077644933,
+    "vocab_used_heldout": 29836,
+    "vocab_size": 32768,
+    "train_s": 50.2
+  }
+}
