@@ -1,0 +1,27 @@
+{
+  "model": "crouton:~/projects/crouton/checkpoints/splade_v1/splade_final.pt",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 21.3,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 245.20974401321223,
+  "avg_query_terms": 94.13622291021672,
+  "index_nnz": 890847,
+  "metrics": {
+    "recall@5": 0.07693015137263691,
+    "recall@10": 0.10622131436089072,
+    "recall@100": 0.2562197245043005,
+    "mrr@10": 0.40462676298589606,
+    "ndcg@10": 0.23119855933146863,
+    "precision@10": 0.18359133126934984
+  },
+  "query_latency_ms_bs1": 18.58,
+  "wall_s": 38.9
+}
