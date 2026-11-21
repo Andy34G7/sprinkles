@@ -214,6 +214,7 @@ class Shortcake:
         self.m.load_state_dict(c["model_state_dict"])
         self.m.to(device).eval()
         use_suffix = c.get("use_suffix", True)
+        self.echo = bool(c.get("echo", False))
         self.sfx = {True: QUERY_SUFFIX if use_suffix else "", False: DOC_SUFFIX if use_suffix else ""}
         self.enc, self.dev, self.max_len, self.bs = encode_texts, device, max_len, bs
         self.name, self.params = f"shortcake:{ckpt}", sum(p.numel() for p in self.m.parameters())
@@ -223,6 +224,18 @@ class Shortcake:
         rows = []
         for b in batched(texts, self.bs):
             ids, mask = self.enc(self.tok, b, self.max_len, self.pad, suffix=self.sfx[is_query])
+            if self.echo:
+                # Duplicate each valid sequence and pool only over the second copy
+                lens = mask.sum(dim=1).tolist()
+                ml = max(int(n) * 2 for n in lens)
+                e_ids = torch.full((len(lens), ml), self.pad, dtype=torch.long)
+                e_mask = torch.zeros((len(lens), ml), dtype=torch.bool)
+                for i, n in enumerate(lens):
+                    n = int(n)
+                    e_ids[i, :n] = ids[i, :n]
+                    e_ids[i, n : 2 * n] = ids[i, :n]
+                    e_mask[i, n : 2 * n] = True
+                ids, mask = e_ids, e_mask
             with torch.autocast("cuda", dtype=torch.bfloat16, enabled=self.dev == "cuda"):
                 rows.append(dense_to_csr(self.m(ids.to(self.dev), attention_mask=mask.to(self.dev))["sparse_vector"]))
         return sp.vstack(rows).tocsr()

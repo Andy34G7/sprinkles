@@ -6,6 +6,9 @@ Document retrieval and sparse neural retrieval (SPLADE) benchmark and distillati
 
 - [`harness/eval_suite.py`](harness/eval_suite.py) — unified General (BEIR) + Code (CoIR) sparse-retrieval evaluation suite (`bm25`, `tfidf`, Hugging Face `SparseEncoder`, `crouton`, and `shortcake` checkpoints), reporting nDCG@10, MRR@10, Recall@5/10/100, active query/doc terms, index `nnz`, and batch-1 query latency.
 - [`harness/summarize.py`](harness/summarize.py) — builds a Markdown scoreboard from `results/*.json` with General / Code / Overall macro-averages and sparsity.
+- [`train/build_mixed_triplets.py`](train/build_mixed_triplets.py) — builds the mixed General + Code triplet dataset (MS MARCO + StackOverflow-QA + CodeSearchNet-python, train splits only).
+- [`train/score_teacher_margins.py`](train/score_teacher_margins.py) — dual-teacher Margin-MSE scorer (`naver/splade-v3` for general, `naver/splade-code-06B` for code, at `max_len=256`).
+- [`train/train_splade.py`](train/train_splade.py) — unified v2 (InfoNCE) and v3 (Margin-MSE distillation) SPLADE trainer for `crouton` and `shortcake` (including optional `--echo` embeddings for Shortcake).
 - [`harness/eval_coir.py`](harness/eval_coir.py) — original single-task CoIR runner (superseded by `eval_suite.py`).
 - [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — comparison protocol (CoIR StackOverflow-QA, matched to `pes-innovation-lab/semantic-search-code-docs`), reference numbers, and experiment roadmap.
 - [`docs/IMPROVEMENTS.md`](docs/IMPROVEMENTS.md) — initial BEIR SciFact and CodeSearchNet baseline measurements and ranked SPLADE improvement plan for `crouton` and `shortcake`.
