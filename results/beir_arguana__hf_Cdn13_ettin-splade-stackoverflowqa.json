@@ -1,0 +1,27 @@
+{
+  "model": "hf:Cdn13/ettin-splade-stackoverflowqa",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 24.9,
+  "params": 16913600,
+  "vocab_size": 50368,
+  "avg_doc_terms": 1550.6275074936593,
+  "avg_query_terms": 1558.1341898643825,
+  "index_nnz": 13450143,
+  "metrics": {
+    "recall@5": 0.5952890792291221,
+    "recall@10": 0.7673090649536045,
+    "recall@100": 0.9764453961456103,
+    "mrr@10": 0.3986455253050542,
+    "ndcg@10": 0.48604413318232564,
+    "precision@10": 0.07673090649536046
+  },
+  "query_latency_ms_bs1": 12.2,
+  "wall_s": 53.2
+}

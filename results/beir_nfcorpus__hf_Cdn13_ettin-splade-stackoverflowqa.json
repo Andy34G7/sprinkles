@@ -1,0 +1,27 @@
+{
+  "model": "hf:Cdn13/ettin-splade-stackoverflowqa",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 12.1,
+  "params": 16913600,
+  "vocab_size": 50368,
+  "avg_doc_terms": 1507.184420589045,
+  "avg_query_terms": 1713.0743034055727,
+  "index_nnz": 5475601,
+  "metrics": {
+    "recall@5": 0.05839129469098285,
+    "recall@10": 0.08930297960278896,
+    "recall@100": 0.2286344292478783,
+    "mrr@10": 0.3363961374023294,
+    "ndcg@10": 0.18807441378513232,
+    "precision@10": 0.15263157894736842
+  },
+  "query_latency_ms_bs1": 8.46,
+  "wall_s": 16.4
+}

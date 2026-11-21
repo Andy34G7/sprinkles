@@ -1,0 +1,27 @@
+{
+  "model": "hf:naver/splade-v3",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 44.5,
+  "params": 109514298,
+  "vocab_size": 30522,
+  "avg_doc_terms": 259.7239050742813,
+  "avg_query_terms": 128.96333333333334,
+  "index_nnz": 1346149,
+  "metrics": {
+    "recall@5": 0.7585,
+    "recall@10": 0.8156666666666667,
+    "recall@100": 0.9343333333333333,
+    "mrr@10": 0.6831481481481481,
+    "ndcg@10": 0.709582295941751,
+    "precision@10": 0.09233333333333334
+  },
+  "query_latency_ms_bs1": 13.1,
+  "wall_s": 86.6
+}

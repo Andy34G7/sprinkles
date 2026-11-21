@@ -1,0 +1,27 @@
+{
+  "model": "hf:Cdn13/ettin-splade-stackoverflowqa",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 17.4,
+  "params": 16913600,
+  "vocab_size": 50368,
+  "avg_doc_terms": 1478.242330696508,
+  "avg_query_terms": 1726.39,
+  "index_nnz": 7661730,
+  "metrics": {
+    "recall@5": 0.6256666666666666,
+    "recall@10": 0.6917777777777778,
+    "recall@100": 0.884,
+    "mrr@10": 0.5215899470899471,
+    "ndcg@10": 0.5547925772128065,
+    "precision@10": 0.077
+  },
+  "query_latency_ms_bs1": 8.93,
+  "wall_s": 25.2
+}

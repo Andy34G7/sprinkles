@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:~/projects/shortcake/checkpoints_splade/best_splade_model.pt",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 35.4,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 67.39332168510968,
+  "avg_query_terms": 47.868,
+  "index_nnz": 1388572,
+  "metrics": {
+    "recall@5": 0.25,
+    "recall@10": 0.396,
+    "recall@100": 0.79,
+    "mrr@10": 0.1598611111111111,
+    "ndcg@10": 0.2144948248765883,
+    "precision@10": 0.039599999999999996
+  },
+  "query_latency_ms_bs1": 17.1,
+  "wall_s": 38.4
+}

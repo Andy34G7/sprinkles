@@ -1,0 +1,27 @@
+{
+  "model": "crouton:~/projects/crouton/checkpoints/splade/splade_final.pt",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 29.2,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 253.50086822303686,
+  "avg_query_terms": 60.276666666666664,
+  "index_nnz": 1313895,
+  "metrics": {
+    "recall@5": 0.5866666666666667,
+    "recall@10": 0.6509444444444444,
+    "recall@100": 0.8416666666666667,
+    "mrr@10": 0.46953439153439147,
+    "ndcg@10": 0.507928443800698,
+    "precision@10": 0.073
+  },
+  "query_latency_ms_bs1": 20.0,
+  "wall_s": 31.9
+}

@@ -1,0 +1,27 @@
+{
+  "model": "hf:naver/splade-code-06B",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 126.1,
+  "params": 596049920,
+  "vocab_size": 151936,
+  "avg_doc_terms": 1865.1880332026747,
+  "avg_query_terms": 1824.6987865810136,
+  "index_nnz": 16178641,
+  "metrics": {
+    "recall@5": 0.7209136331192005,
+    "recall@10": 0.8836545324768023,
+    "recall@100": 0.9964311206281228,
+    "mrr@10": 0.5065358644052435,
+    "ndcg@10": 0.5963233617838938,
+    "precision@10": 0.08836545324768022
+  },
+  "query_latency_ms_bs1": 49.44,
+  "wall_s": 169.5
+}

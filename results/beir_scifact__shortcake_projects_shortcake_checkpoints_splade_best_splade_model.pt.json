@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:~/projects/shortcake/checkpoints_splade/best_splade_model.pt",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 17.7,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 293.7989581323558,
+  "avg_query_terms": 123.77333333333333,
+  "index_nnz": 1522760,
+  "metrics": {
+    "recall@5": 0.3586111111111111,
+    "recall@10": 0.43900000000000006,
+    "recall@100": 0.7233888888888889,
+    "mrr@10": 0.28631349206349205,
+    "ndcg@10": 0.3180748385306119,
+    "precision@10": 0.04933333333333333
+  },
+  "query_latency_ms_bs1": 21.27,
+  "wall_s": 21.0
+}

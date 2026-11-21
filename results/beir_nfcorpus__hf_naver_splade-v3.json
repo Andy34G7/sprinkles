@@ -1,0 +1,27 @@
+{
+  "model": "hf:naver/splade-v3",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 31.5,
+  "params": 109514298,
+  "vocab_size": 30522,
+  "avg_doc_terms": 246.38067712634188,
+  "avg_query_terms": 25.63467492260062,
+  "index_nnz": 895101,
+  "metrics": {
+    "recall@5": 0.13781024136366898,
+    "recall@10": 0.17133001040843068,
+    "recall@100": 0.297023244770442,
+    "mrr@10": 0.5689960194604157,
+    "ndcg@10": 0.3576184150145933,
+    "precision@10": 0.2582043343653251
+  },
+  "query_latency_ms_bs1": 12.53,
+  "wall_s": 49.3
+}

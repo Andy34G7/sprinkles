@@ -1,0 +1,27 @@
+{
+  "model": "hf:naver/splade-code-06B",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 271.2,
+  "params": 596049920,
+  "vocab_size": 151936,
+  "avg_doc_terms": 1398.2087944088526,
+  "avg_query_terms": 1126.174,
+  "index_nnz": 28808694,
+  "metrics": {
+    "recall@5": 0.412,
+    "recall@10": 0.614,
+    "recall@100": 0.934,
+    "mrr@10": 0.28366507936507934,
+    "ndcg@10": 0.3604961471167246,
+    "precision@10": 0.061399999999999996
+  },
+  "query_latency_ms_bs1": 45.88,
+  "wall_s": 285.8
+}

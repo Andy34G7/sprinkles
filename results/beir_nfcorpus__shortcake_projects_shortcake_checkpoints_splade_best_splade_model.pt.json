@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:~/projects/shortcake/checkpoints_splade/best_splade_model.pt",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 9.1,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 329.83071841453346,
+  "avg_query_terms": 78.30340557275542,
+  "index_nnz": 1198275,
+  "metrics": {
+    "recall@5": 0.036629987999860565,
+    "recall@10": 0.049224418371847885,
+    "recall@100": 0.15162765741363782,
+    "mrr@10": 0.24938571919996064,
+    "ndcg@10": 0.11583642257957179,
+    "precision@10": 0.09071207430340557
+  },
+  "query_latency_ms_bs1": 17.53,
+  "wall_s": 11.5
+}

@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:~/projects/shortcake/checkpoints_splade/best_splade_model.pt",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 21.2,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 220.72930597186996,
+  "avg_query_terms": 228.33904354032833,
+  "index_nnz": 1914606,
+  "metrics": {
+    "recall@5": 0.20842255531763026,
+    "recall@10": 0.2897930049964311,
+    "recall@100": 0.6538187009279086,
+    "mrr@10": 0.12264680556971777,
+    "ndcg@10": 0.16198065487226207,
+    "precision@10": 0.028979300499643115
+  },
+  "query_latency_ms_bs1": 18.41,
+  "wall_s": 30.7
+}
