@@ -225,8 +225,9 @@ def main() -> None:
     ap.add_argument("--max-doc-len", type=int, default=256)
     ap.add_argument("--lr", type=float, default=4e-5)
     ap.add_argument("--query-reg-type", choices=["l1", "flops"], default="l1")
-    ap.add_argument("--lambda-q", type=float, default=0.015)
-    ap.add_argument("--lambda-d", type=float, default=0.04)
+    ap.add_argument("--lambda-q", type=float, default=0.005)
+    ap.add_argument("--lambda-d", type=float, default=0.008)
+    ap.add_argument("--no-vocab-norm-flops", action="store_true", help="Disable V/30522 vocab-size normalization on FLOPS")
     ap.add_argument("--reg-warmup-steps", type=int, default=2000)
     ap.add_argument("--temperature", type=float, default=1.0)
     ap.add_argument("--margin-mse-weight", type=float, default=0.0, help="0.0 = v2 (InfoNCE only); >0 = v3 (Margin-MSE distillation)")
@@ -317,8 +318,10 @@ def main() -> None:
                     )
                     rank = rank + a.margin_mse_weight * mmse
 
-                q_reg = q_l1 if a.query_reg_type == "l1" else q_flops
-                reg = lq * q_reg + ld * 0.5 * (p_flops + n_flops)
+                vocab_scale = 1.0 if a.no_vocab_norm_flops else (float(p_vec.size(-1)) / 30522.0)
+                q_reg = q_l1 if a.query_reg_type == "l1" else (q_flops * vocab_scale)
+                d_reg = 0.5 * (p_flops + n_flops) * vocab_scale
+                reg = lq * q_reg + ld * d_reg
                 loss = (rank + reg) / a.grad_accum
 
             loss.backward()

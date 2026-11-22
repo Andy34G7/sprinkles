@@ -72,8 +72,8 @@ Both models trained identically via [`train/train_splade.py`](../train/train_spl
 
 ---
 
-## 4. Roadmap (`v2 → v3 → v4`)
+## 5. Roadmap (`v3 → v4 → v5`)
 
-- **v2 (Scale + Mixed Domain, InfoNCE only):** Train both `crouton-base` and `shortcake-base` via [`train/train_splade.py`](../train/train_splade.py) on **200k mixed General + Code triplets** (`120k` MS MARCO + `40k` StackOverflow-QA + `40k` CodeSearchNet-python), `10,000` steps, `temperature=1.0`, `query_reg_type=l1 (0.015)`, `lambda_d=0.04` (FLOPS).
-- **v3 (Dual-Teacher Margin-MSE Distillation):** Score the exact same 200k triplets via [`train/score_teacher_margins.py`](../train/score_teacher_margins.py) (`naver/splade-v3` for General, `naver/splade-code-06B` for Code, at `max_len=256`) and retrain with Margin-MSE + optional Shortcake `--echo` embeddings and smaller tiers (`crouton-tiny` 14M, `shortcake-small` 23M vs. `ettin-17m`).
-- **v4 (Crouton v2.0.0 Backbones):** Apply the winning v3 recipe to the newly pretrained 70/30-tokenizer `crouton` v2.0.0 family.
+- **v3 (Vocab-Normalized FLOPS + Gentler Sparsity, InfoNCE only):** Exact same 200k mixed triplets & 10k steps as v2, with FLOPS scaled by `V / 30522` (so 16k Shortcake and 32k Crouton share one effective sparsity scale) and gentler lambdas (`lambda_q=0.005` L1, `lambda_d=0.008` normalized FLOPS) to prevent short-code doc collapse on `cosqa`.
+- **v4 (Dual-Teacher Margin-MSE Distillation):** Score the exact same 200k triplets via [`train/score_teacher_margins.py`](../train/score_teacher_margins.py) (`naver/splade-v3` for General, `naver/splade-code-06B` for Code, at `max_len=256`) and retrain with Margin-MSE + optional Shortcake `--echo` embeddings and smaller tiers (`crouton-tiny` 14M, `shortcake-small` 23M vs. `ettin-17m`).
+- **v5 (Crouton v2.0.0 Backbones):** Apply the winning v4 recipe to the newly pretrained 70/30-tokenizer `crouton` v2.0.0 family.
