@@ -63,7 +63,28 @@ Both models trained identically via [`train/train_splade.py`](../train/train_spl
 
 ---
 
-## 4. Tokenizer Investigation (`docs/TOKENISATION.md`)
+## 4. v3 Ablation: Vocab-Normalized FLOPS (`V / 30522`) + Gentler Lambdas (InfoNCE Only)
+
+Same 200k mixed triplets and 10k steps as v2, with FLOPS normalized by `V / 30522` (`lambda_q=0.005` L1, `lambda_d=0.008` vocab-normalized FLOPS, `margin_mse_weight=0.0`).
+
+| Model | `arguana` | `nfcorpus` | `scifact` | `cosqa` | `stackoverflow-qa` | **General** | **Code** | **Overall** | Avg Q/D |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Crouton v2 (unnorm `0.015/0.04`) | **0.1876** | **0.2329** | **0.4720** | **0.1074** | 0.5695 | **0.2975** | 0.3385 | **0.3139** | 101 / 160 |
+| **Crouton v3 (`V/30522`, `0.005/0.008`)** | 0.1460 | 0.2206 | 0.4612 | 0.0957 | **0.6128** | 0.2759 | **0.3543** | 0.3072 | 174 / 284 |
+| Shortcake v2 (unnorm `0.015/0.04`) | **0.1761** | 0.1648 | 0.2881 | **0.0933** | 0.4650 | 0.2097 | 0.2792 | 0.2375 | 34 / 53 |
+| **Shortcake v3 (`V/30522`, `0.005/0.008`)** | 0.1210 | **0.1719** | **0.3344** | 0.0908 | **0.5928** | **0.2091** | **0.3418** | **0.2622** | 93 / 170 |
+
+### Findings from v3
+1. **Vocab-normalized FLOPS worked as designed:** Shortcake (16k) and Crouton (32k) converged to nearly identical sparsity on `stackoverflow-qa` (`45/135` vs. `64/130`) instead of Shortcake collapsing to `22/46`.
+2. **Strong `stackoverflow-qa` gains without distillation:**
+   - **Crouton v3** hit **`0.6128`** nDCG@10 (**R@100 `0.9072`**, +0.1633 over v0 `0.4495`, +0.0433 over v2) at just `64/130` active terms (**11× sparser** than Ettin-17M's `1348/1397`!).
+   - **Shortcake v3** jumped **+0.1278** over v2 to **`0.5928`** (`45/135` terms, +0.0616 over v1), plus its best `nfcorpus` (`0.1719`) and a +0.0463 recovery on `scifact` (`0.3344`).
+3. **Root cause of low `coir:cosqa` (`~0.09`) in v2 & v3:** `CoIR-Retrieval/codesearchnet` leaves raw docstrings inside Python function bodies, so binary InfoNCE matched verbatim docstring words in 14–20 tokens instead of learning code-token expansion (unlike Shortcake v0/v1, which stripped docstrings and reached `0.2628` on `cosqa`). Fix for v4: strip docstrings from CodeSearchNet in `build_mixed_triplets.py`.
+4. **Confirmed ceiling of pure InfoNCE:** Across v0, v1, v2, and v3, pure InfoNCE without a teacher plateaus at `~0.31` Overall for 50M models (trading General for Code when mixed). **v4 (dual-teacher Margin-MSE distillation)** is the next major step.
+
+---
+
+## 5. Tokenizer Investigation (`docs/TOKENISATION.md`)
 
 - Word-initial code fragmentation in `crouton` v1.0.0 (`18–20/102` code terms) was caused by training the tokenizer on prose only (`fineweb-edu` + `cosmopedia`), **not** by `wp-bpe-ppig` scoring.
 - Adding 30% Python code to the tokenizer corpus (Experiment E) cut code fragmentation nearly in half (`18 → 10/102`) and boosted code compression by **+20.7%** (`3.448 → 4.159` B/tok) for only a 1.5% prose cost.

@@ -1,0 +1,27 @@
+{
+  "model": "crouton:/content/checkpoints/crouton_v3/splade_final.pt",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 90.2,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 19.706707435449427,
+  "avg_query_terms": 51.854,
+  "index_nnz": 406037,
+  "metrics": {
+    "recall@5": 0.112,
+    "recall@10": 0.18,
+    "recall@100": 0.498,
+    "mrr@10": 0.07037142857142857,
+    "ndcg@10": 0.0956780727052241,
+    "precision@10": 0.018
+  },
+  "query_latency_ms_bs1": 19.6,
+  "wall_s": 93.0
+}

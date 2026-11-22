@@ -1,0 +1,27 @@
+{
+  "model": "crouton:/content/checkpoints/crouton_v3/splade_final.pt",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 22.0,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 379.81365262868155,
+  "avg_query_terms": 45.01238390092879,
+  "index_nnz": 1379863,
+  "metrics": {
+    "recall@5": 0.07057357236532173,
+    "recall@10": 0.0951145441181074,
+    "recall@100": 0.2605041537722967,
+    "mrr@10": 0.3949235834684751,
+    "ndcg@10": 0.22057681108065785,
+    "precision@10": 0.17275541795665633
+  },
+  "query_latency_ms_bs1": 19.79,
+  "wall_s": 25.9
+}

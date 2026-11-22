@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/checkpoints/shortcake_v3/best_splade_model.pt",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 9.1,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 220.8747591522158,
+  "avg_query_terms": 28.928792569659443,
+  "index_nnz": 802438,
+  "metrics": {
+    "recall@5": 0.05604689584358481,
+    "recall@10": 0.07917515938069171,
+    "recall@100": 0.2081439751565761,
+    "mrr@10": 0.31921838911003,
+    "ndcg@10": 0.17186949032137752,
+    "precision@10": 0.1303405572755418
+  },
+  "query_latency_ms_bs1": 17.1,
+  "wall_s": 27.1
+}

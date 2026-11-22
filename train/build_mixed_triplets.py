@@ -14,7 +14,15 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 from pathlib import Path
+
+
+def _strip_python_docstrings(code: str, query: str = "") -> str:
+    cleaned = code.replace(query, "") if query else code
+    cleaned = re.sub(r'"""[\s\S]*?"""', "", cleaned)
+    cleaned = re.sub(r"'''[\s\S]*?'''", "", cleaned)
+    return cleaned.strip()
 
 
 def _doc_text(row: dict) -> str:
@@ -100,7 +108,9 @@ def load_codesearchnet_python(n: int, rng: random.Random) -> list[dict]:
     corpus_ds = load_dataset("CoIR-Retrieval/codesearchnet", "python-corpus", split="corpus")
     queries_ds = load_dataset("CoIR-Retrieval/codesearchnet", "python-queries", split="queries")
     qrels = load_dataset("CoIR-Retrieval/codesearchnet", "python-qrels", split="train")
-    corpus = {str(r["_id"]): _doc_text(r) for r in corpus_ds}
+    # Strip Python docstrings from code bodies so models cannot cheat via verbatim docstring overlap
+    corpus = {str(r["_id"]): _strip_python_docstrings(_doc_text(r)) for r in corpus_ds}
+    corpus = {k: v for k, v in corpus.items() if len(v) >= 30}
     queries = {str(r["_id"]): str(r["text"]) for r in queries_ds}
     return _build_coir_triplets(corpus, queries, qrels, "codesearchnet", n, negs_per_pos=1, rng=rng)
 
