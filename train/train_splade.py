@@ -230,7 +230,13 @@ def main() -> None:
     ap.add_argument("--no-vocab-norm-flops", action="store_true", help="Disable V/30522 vocab-size normalization on FLOPS")
     ap.add_argument("--reg-warmup-steps", type=int, default=2000)
     ap.add_argument("--temperature", type=float, default=1.0)
-    ap.add_argument("--margin-mse-weight", type=float, default=0.0, help="0.0 = v2 (InfoNCE only); >0 = v3 (Margin-MSE distillation)")
+    ap.add_argument("--margin-mse-weight", type=float, default=0.0, help="0.0 = v2 (InfoNCE only); >0 = v4 (Margin-MSE distillation)")
+    ap.add_argument(
+        "--teacher-margin-rms",
+        type=float,
+        default=8.0,
+        help="Normalize each teacher's (pos_score - neg_score) RMS to this scale (<=0 disables). Matches naver/splade-v3 (~8.0).",
+    )
     ap.add_argument("--infonce-weight", type=float, default=1.0)
     ap.add_argument("--echo", action="store_true", help="Shortcake only: Echo embeddings (2x input, pool second copy)")
     ap.add_argument("--save-interval", type=int, default=5000)
@@ -250,6 +256,24 @@ def main() -> None:
     )
 
     ds = TripletJSONLDataset(a.triplets, max_examples=a.max_examples)
+
+    if a.margin_mse_weight > 0.0 and a.teacher_margin_rms > 0.0:
+        import math
+        by_teacher: dict[str, list[dict[str, Any]]] = {}
+        for r in ds.rows:
+            if r.get("pos_score") is not None and r.get("neg_score") is not None:
+                by_teacher.setdefault(str(r.get("teacher", "default")), []).append(r)
+        for t_name, t_rows in by_teacher.items():
+            rms = math.sqrt(sum((float(r["pos_score"]) - float(r["neg_score"])) ** 2 for r in t_rows) / len(t_rows))
+            if rms > 0.0:
+                scale = a.teacher_margin_rms / rms
+                for r in t_rows:
+                    r["pos_score"] = float(r["pos_score"]) * scale
+                    r["neg_score"] = float(r["neg_score"]) * scale
+                print(
+                    f"Normalized teacher={t_name} ({len(t_rows):,} rows): rms {rms:.2f} -> {a.teacher_margin_rms:.2f} (scale={scale:.5f})",
+                    flush=True,
+                )
 
     def collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
         q_ids, q_mask = adapter.encode_batch([b["query"] for b in batch], a.max_query_len, is_query=True)
