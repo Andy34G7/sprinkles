@@ -1,0 +1,27 @@
+{
+  "model": "crouton:/content/checkpoints/crouton_v2/splade_final.pt",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 51.1,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 311.1727000230574,
+  "avg_query_terms": 352.04496788008566,
+  "index_nnz": 2699112,
+  "metrics": {
+    "recall@5": 0.2291220556745182,
+    "recall@10": 0.3361884368308351,
+    "recall@100": 0.715203426124197,
+    "mrr@10": 0.14250280411950644,
+    "ndcg@10": 0.18763062074939124,
+    "precision@10": 0.033618843683083516
+  },
+  "query_latency_ms_bs1": 22.29,
+  "wall_s": 67.1
+}

@@ -41,7 +41,29 @@ Updated: 2026-11-21. All retrieval evaluations use [`harness/eval_suite.py`](../
 
 ---
 
-## 3. Tokenizer Investigation (`docs/TOKENISATION.md`)
+## 3. v2 Ablation: Scaled Mixed-Domain InfoNCE (200k Triplets, 10k Steps, No Distillation)
+
+Both models trained identically via [`train/train_splade.py`](../train/train_splade.py) on `200,000` mixed triplets (`120k` MS MARCO + `40k` StackOverflow-QA + `40k` CodeSearchNet-python), `10,000` steps (`bs=32 × ga=2`), `temperature=1.0`, `query_reg_type=l1 (0.015)`, `lambda_d=0.04` (FLOPS), `margin_mse_weight=0.0`.
+
+| Model | `arguana` | `nfcorpus` | `scifact` | `cosqa` | `stackoverflow-qa` | **General** | **Code** | **Overall** | Avg Q/D |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Crouton v0 (100k MS MARCO) | **0.2880** | **0.2483** | **0.5079** | 0.0980 | 0.4495 | **0.3481** | 0.2738 | **0.3184** | 124 / 248 |
+| **Crouton v2 (200k mixed)** | 0.1876 | 0.2329 | 0.4720 | **0.1074** | **0.5695** | 0.2975 | **0.3385** | 0.3139 | 101 / 160 |
+| Shortcake v1 (50k CSN, `temp=1.0`) | 0.1256 | 0.1425 | **0.3902** | **0.2628** | **0.5312** | **0.2194** | **0.3970** | **0.2905** | 470 / 738 |
+| **Shortcake v2 (200k mixed)** | **0.1761** | **0.1648** | 0.2881 | 0.0933 | 0.4650 | 0.2097 | 0.2792 | 0.2375 | 34 / 53 |
+
+### Findings from v2
+1. **Mixed data lifted Crouton's Code retrieval strongly (+0.0647 Code avg):** `coir:stackoverflow-qa` jumped **+0.1200** (`0.4495 → 0.5695`, R@100 `0.753 → 0.880`) at nearly **3× sparser** vectors (`37/74` vs. `133/207`), and `coir:cosqa` rose `0.0980 → 0.1074`.
+2. **Shortcake v2 improved on `nfcorpus` (`0.1425 → 0.1648`) and `arguana` (`0.1256 → 0.1761`),** showing cross-domain transfer from MS MARCO.
+3. **Critical sparsity finding (why `cosqa` & `scifact` under-expanded in v2):**
+   - `lambda_d=0.04` (FLOPS) + `lambda_q=0.015` (L1) **over-pruned short code documents** on `coir:cosqa`: Crouton dropped to **`13` active doc terms** and Shortcake collapsed to **`8` active doc terms** (and `34/53` overall!).
+   - Because FLOPS ($\sum_j \bar{v}_j^2$) scales inversely with vocab size, Shortcake's **16k vocab** takes a **2× harsher** FLOPS penalty than Crouton's **32k vocab** at the same `lambda_d`.
+   - **Rule for v3:** Lower `lambda_d` to **`0.015`** (Crouton 32k) and **`0.005–0.008`** (Shortcake 16k), and `lambda_q` (L1) to **`0.008`** (Crouton) / **`0.003`** (Shortcake), targeting ~100–250 active doc terms across both prose and short code.
+4. **Why pure InfoNCE hits a ceiling around `~0.31` Overall without distillation:** Both v0 and v2 Crouton plateau around `0.31–0.32` Overall with binary positive/negative InfoNCE (using random CoIR negatives and BM25 MS MARCO negatives). **v3 (dual-teacher Margin-MSE distillation)** is the key remaining lever to break into the `0.40+` tier.
+
+---
+
+## 4. Tokenizer Investigation (`docs/TOKENISATION.md`)
 
 - Word-initial code fragmentation in `crouton` v1.0.0 (`18–20/102` code terms) was caused by training the tokenizer on prose only (`fineweb-edu` + `cosmopedia`), **not** by `wp-bpe-ppig` scoring.
 - Adding 30% Python code to the tokenizer corpus (Experiment E) cut code fragmentation nearly in half (`18 → 10/102`) and boosted code compression by **+20.7%** (`3.448 → 4.159` B/tok) for only a 1.5% prose cost.
