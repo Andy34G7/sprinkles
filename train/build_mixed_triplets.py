@@ -100,7 +100,7 @@ def load_stackoverflow_qa(n: int, rng: random.Random) -> list[dict]:
     return _build_coir_triplets(corpus, queries, qrels, "stackoverflow-qa", n, negs_per_pos=3, rng=rng)
 
 
-def load_codesearchnet_python(n: int, rng: random.Random) -> list[dict]:
+def load_codesearchnet_python(n: int, rng: random.Random, strip_docstrings: bool = False) -> list[dict]:
     if n <= 0:
         return []
     from datasets import load_dataset
@@ -108,9 +108,11 @@ def load_codesearchnet_python(n: int, rng: random.Random) -> list[dict]:
     corpus_ds = load_dataset("CoIR-Retrieval/codesearchnet", "python-corpus", split="corpus")
     queries_ds = load_dataset("CoIR-Retrieval/codesearchnet", "python-queries", split="queries")
     qrels = load_dataset("CoIR-Retrieval/codesearchnet", "python-qrels", split="train")
-    # Strip Python docstrings from code bodies so models cannot cheat via verbatim docstring overlap
-    corpus = {str(r["_id"]): _strip_python_docstrings(_doc_text(r)) for r in corpus_ds}
-    corpus = {k: v for k, v in corpus.items() if len(v) >= 30}
+    if strip_docstrings:
+        corpus = {str(r["_id"]): _strip_python_docstrings(_doc_text(r)) for r in corpus_ds}
+        corpus = {k: v for k, v in corpus.items() if len(v) >= 30}
+    else:
+        corpus = {str(r["_id"]): _doc_text(r) for r in corpus_ds}
     queries = {str(r["_id"]): str(r["text"]) for r in queries_ds}
     return _build_coir_triplets(corpus, queries, qrels, "codesearchnet", n, negs_per_pos=1, rng=rng)
 
@@ -121,13 +123,14 @@ def main() -> None:
     ap.add_argument("--n-msmarco", type=int, default=120_000)
     ap.add_argument("--n-soqa", type=int, default=40_000)
     ap.add_argument("--n-csn", type=int, default=40_000)
+    ap.add_argument("--strip-csn-docstrings", action="store_true", help="Strip Python docstrings from CSN code bodies")
     ap.add_argument("--seed", type=int, default=42)
     a = ap.parse_args()
 
     rng = random.Random(a.seed)
     ms = load_msmarco(a.n_msmarco)
     so = load_stackoverflow_qa(a.n_soqa, rng)
-    cs = load_codesearchnet_python(a.n_csn, rng)
+    cs = load_codesearchnet_python(a.n_csn, rng, strip_docstrings=a.strip_csn_docstrings)
 
     rows = ms + so + cs
     rng.shuffle(rows)

@@ -30,7 +30,8 @@ def score_group(
     from sentence_transformers import SparseEncoder
 
     print(f"Scoring {len(rows):,} rows with {teacher_repo} (max_len={max_len}, bs={batch_size})...", flush=True)
-    enc = SparseEncoder(teacher_repo, device=device, trust_remote_code=True)
+    mkw = {"dtype": torch.bfloat16} if (device == "cuda" and torch.cuda.is_bf16_supported()) else {}
+    enc = SparseEncoder(teacher_repo, device=device, trust_remote_code=True, model_kwargs=mkw)
     enc.max_seq_length = max_len
 
     kept: list[dict] = []
