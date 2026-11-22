@@ -41,9 +41,9 @@ def score_group(
         ps = [r["pos"] for r in chunk]
         ns = [r["neg"] for r in chunk]
 
-        q_v = enc.encode_query(qs, batch_size=batch_size, convert_to_tensor=True, show_progress_bar=False)
-        p_v = enc.encode_document(ps, batch_size=batch_size, convert_to_tensor=True, show_progress_bar=False)
-        n_v = enc.encode_document(ns, batch_size=batch_size, convert_to_tensor=True, show_progress_bar=False)
+        q_v = enc.encode_query(qs, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
+        p_v = enc.encode_document(ps, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
+        n_v = enc.encode_document(ns, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
 
         pos_scores = (q_v.float() * p_v.float()).sum(dim=-1).cpu().tolist()
         neg_scores = (q_v.float() * n_v.float()).sum(dim=-1).cpu().tolist()
