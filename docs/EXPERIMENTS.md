@@ -1,6 +1,6 @@
 # Experiment Log & Findings
 
-Updated: 2026-11-21. All retrieval evaluations use [`harness/eval_suite.py`](../harness/eval_suite.py) on the `core` suite (`beir:arguana`, `beir:nfcorpus`, `beir:scifact`, `coir:cosqa`, `coir:stackoverflow-qa`) at `max_len=256`.
+Updated: 2026-11-23. All retrieval evaluations use [`harness/eval_suite.py`](../harness/eval_suite.py) on the `core` suite (`beir:arguana`, `beir:nfcorpus`, `beir:scifact`, `coir:cosqa`, `coir:stackoverflow-qa`) at `max_len=256`.
 
 ---
 
@@ -84,17 +84,41 @@ Same 200k mixed triplets and 10k steps as v2, with FLOPS normalized by `V / 3052
 
 ---
 
-## 5. Tokenizer Investigation (`docs/TOKENISATION.md`)
+## 5. v4 & v4-2 Ablation: Dual-Teacher Margin-MSE Distillation + Docstring-Stripped CSN
+
+Both models trained via [`train/train_splade.py`](../train/train_splade.py) on `90,010` teacher-scored mixed triplets (`50,012` MS MARCO scored by `naver/splade-v3` + `39,998` StackOverflow-QA & CodeSearchNet scored by `naver/splade-code-06B`, `margin_min=0.5`, `max_len=256`), `8,000` steps (`bs=32 × ga=2`), `margin_mse_weight=1.0`, `infonce_weight=0.1`, `lambda_q=0.005` (L1), `lambda_d=0.008` (vocab-normalized FLOPS, `V / 30522`), and per-teacher RMS margin normalization (`--teacher-margin-rms 8.0`).
+- **v4:** Unstripped CSN (matching v3 data) for a clean InfoNCE → Margin-MSE comparison.
+- **v4-2:** Same 70,010 MS MARCO + SO-QA rows + 20,000 freshly scored `--strip-csn-docstrings` CSN rows.
+
+| Model | `arguana` | `nfcorpus` | `scifact` | `cosqa` | `stackoverflow-qa` | **General** | **Code** | **Overall** | Avg Q/D |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Crouton v3 (InfoNCE) | 0.1460 | **0.2206** | **0.4612** | 0.0957 | **0.6128** | **0.2759** | **0.3543** | **0.3072** | 174 / 284 |
+| **Crouton v4 (Margin-MSE)** | **0.2189** | 0.1440 | 0.4571 | **0.1356** | 0.5668 | 0.2733 | 0.3512 | 0.3045 | 213 / 286 |
+| Shortcake v3 (InfoNCE) | 0.1210 | **0.1719** | 0.3344 | 0.0908 | **0.5928** | **0.2091** | 0.3418 | 0.2622 | 93 / 170 |
+| **Shortcake v4 (Margin-MSE)** | **0.1537** | 0.1180 | **0.3439** | 0.1584 | 0.5754 | 0.2052 | 0.3669 | **0.2699** | 175 / 289 |
+| **Shortcake v4-2 (Margin-MSE, stripped CSN)** | 0.1464 | 0.1049 | 0.3076 | **0.1863** | 0.5878 | 0.1863 | **0.3871** | 0.2666 | 181 / 295 |
+
+### Findings from v4 & v4-2
+1. **Critical multi-teacher distillation lesson (`--teacher-margin-rms`):** `naver/splade-v3` (`~138/247` active terms) has raw margin `RMS = 7.99`, whereas `naver/splade-code-06B` (`~1666/1614` active terms) has raw margin `RMS = 418.62` (**52.4× larger**). Because Margin-MSE is quadratic, unnormalized dual-teacher distillation produces a **~2,745× MSE imbalance** that drowns out MS MARCO and forces `l0_d > 4,000`. Normalizing each teacher's `(pos_score, neg_score)` to `RMS = 8.0` (`×1.00077` for `splade-v3`, `×0.01911` for `splade-code-06B`) immediately restored balanced training (`loss 55 → 0.5`, `l0_q ~ 90–120`, `l0_d ~ 220–240`).
+2. **Margin-MSE lifted `cosqa` and `arguana` on both architectures:**
+   - **Crouton v4:** `arguana` jumped **+0.0729** (`0.1460 → 0.2189`) and `cosqa` jumped **+0.0399** (`0.0957 → 0.1356`, R@100 `0.6060`).
+   - **Shortcake v4:** `cosqa` jumped **+0.0676** (`0.0908 → 0.1584`, R@100 `0.6640`), `arguana` +0.0327 (`0.1210 → 0.1537`), and `scifact` +0.0095 (`0.3344 → 0.3439`).
+3. **Stripping CSN docstrings (`v4-2`) delivered the strongest mixed-domain Code score (`0.3871`):**
+   - `coir:cosqa` rose another **+0.0279** to **`0.1863`** (**R@100 `0.7140`**, more than **2×** v3's `0.0908`, beating BM25 `0.1426` and TF-IDF `0.1299`, and approaching `ettin-17m` `0.1966`), while `stackoverflow-qa` also improved to **`0.5878`** (`R@100 = 0.8756`).
+4. **Why `nfcorpus` dipped and why 50M models still trail `ettin-17m` (`0.4334`) and `splade-v3` (`0.4925`):**
+   - Two structural bottlenecks remain: (a) **pretraining scale & objective** — our 50M backbones are causal LMs pretrained on ~2B tokens vs. `ettin-17m`'s 1.7T-token native bidirectional MLM; and (b) **single random/BM25 negatives** — `splade-code-06B` had `0.0%` negative margins on our CoIR negatives (too easy), whereas production SPLADE distillation uses multiple cross-encoder-mined hard negatives per query.
+
+---
+
+## 6. Tokenizer Investigation (`docs/TOKENISATION.md`)
 
 - Word-initial code fragmentation in `crouton` v1.0.0 (`18–20/102` code terms) was caused by training the tokenizer on prose only (`fineweb-edu` + `cosmopedia`), **not** by `wp-bpe-ppig` scoring.
 - Adding 30% Python code to the tokenizer corpus (Experiment E) cut code fragmentation nearly in half (`18 → 10/102`) and boosted code compression by **+20.7%** (`3.448 → 4.159` B/tok) for only a 1.5% prose cost.
 - Unmodified **`wp-bpe-ppig`** beat `pmi_floor` (negligible difference) and outperformed plain frequency BPE on downstream LM BPB (`2.522` vs. `2.549`), Morph F1, Identifier F1, and Exp E code fragmentation (`10` vs. `11`).
-- Decision: stick with default `wp-bpe-ppig`, retrain the `crouton` v2.0.0 model family (`tiny`, `small`, `base`) on the 70/30 tokenizer, and evaluate those new backbones as **v4** after the `v0 → v1 → v2 → v3` SPLADE ablation ladder.
+- Decision: stick with default `wp-bpe-ppig`, retrain the `crouton` v2.0.0 model family (`tiny`, `small`, `base`) on the 70/30 tokenizer, and evaluate those new backbones as **v5**.
 
 ---
 
-## 5. Roadmap (`v3 → v4 → v5`)
+## 7. Next Steps (`v5`)
 
-- **v3 (Vocab-Normalized FLOPS + Gentler Sparsity, InfoNCE only):** Exact same 200k mixed triplets & 10k steps as v2, with FLOPS scaled by `V / 30522` (so 16k Shortcake and 32k Crouton share one effective sparsity scale) and gentler lambdas (`lambda_q=0.005` L1, `lambda_d=0.008` normalized FLOPS) to prevent short-code doc collapse on `cosqa`.
-- **v4 (Dual-Teacher Margin-MSE Distillation):** Score the exact same 200k triplets via [`train/score_teacher_margins.py`](../train/score_teacher_margins.py) (`naver/splade-v3` for General, `naver/splade-code-06B` for Code, at `max_len=256`) and retrain with Margin-MSE + optional Shortcake `--echo` embeddings and smaller tiers (`crouton-tiny` 14M, `shortcake-small` 23M vs. `ettin-17m`).
-- **v5 (Crouton v2.0.0 Backbones):** Apply the winning v4 recipe to the newly pretrained 70/30-tokenizer `crouton` v2.0.0 family.
+- **Crouton v2.0.0 Pretraining (`tiny-14m → small-27m → base-50m`):** Pretrain on the cached 2.0B-token 70/30 prose+code shards (`/MyDrive/crouton_v2/data_2b/`), publish as `v2.0.0` release on `Andy34G7/crouton`, then run **v5** SPLADE distillation (with docstring-stripped CSN + harder negatives).
