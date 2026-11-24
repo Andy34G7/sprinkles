@@ -35,26 +35,41 @@ def score_group(
     enc.max_seq_length = max_len
 
     kept: list[dict] = []
+    is_multi = isinstance(rows[0].get("negs"), list)
     for start in range(0, len(rows), batch_size):
         chunk = rows[start : start + batch_size]
         qs = [r["query"] for r in chunk]
         ps = [r["pos"] for r in chunk]
-        ns = [r["neg"] for r in chunk]
 
         q_v = enc.encode_query(qs, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
         p_v = enc.encode_document(ps, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
-        n_v = enc.encode_document(ns, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
-
         pos_scores = (q_v.float() * p_v.float()).sum(dim=-1).cpu().tolist()
-        neg_scores = (q_v.float() * n_v.float()).sum(dim=-1).cpu().tolist()
 
-        for r, ps_i, ns_i in zip(chunk, pos_scores, neg_scores):
-            if abs(ps_i - ns_i) >= margin_min:
-                out = dict(r)
-                out["pos_score"] = round(float(ps_i), 4)
-                out["neg_score"] = round(float(ns_i), 4)
-                out["teacher"] = teacher_repo
-                kept.append(out)
+        if is_multi:
+            k = len(chunk[0]["negs"])
+            flat_negs = [n for r in chunk for n in r["negs"]]
+            n_v = enc.encode_document(flat_negs, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
+            n_v = n_v.float().view(len(chunk), k, -1)
+            neg_scores_mat = (q_v.float().unsqueeze(1) * n_v).sum(dim=-1).cpu().tolist()
+            for r, ps_i, ns_list in zip(chunk, pos_scores, neg_scores_mat):
+                if max(abs(ps_i - n_s) for n_s in ns_list) >= margin_min:
+                    out = dict(r)
+                    out["pos_score"] = round(float(ps_i), 4)
+                    out["neg_scores"] = [round(float(x), 4) for x in ns_list]
+                    out["teacher"] = teacher_repo
+                    kept.append(out)
+        else:
+            ns = [r["neg"] for r in chunk]
+            n_v = enc.encode_document(ns, batch_size=batch_size, convert_to_tensor=True, convert_to_sparse_tensor=False, show_progress_bar=False)
+            neg_scores = (q_v.float() * n_v.float()).sum(dim=-1).cpu().tolist()
+
+            for r, ps_i, ns_i in zip(chunk, pos_scores, neg_scores):
+                if abs(ps_i - ns_i) >= margin_min:
+                    out = dict(r)
+                    out["pos_score"] = round(float(ps_i), 4)
+                    out["neg_score"] = round(float(ns_i), 4)
+                    out["teacher"] = teacher_repo
+                    kept.append(out)
 
         if (start // batch_size) % 100 == 0:
             print(f"  [{teacher_repo}] {min(start + batch_size, len(rows)):,}/{len(rows):,} (kept {len(kept):,})", flush=True)

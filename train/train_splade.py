@@ -68,8 +68,37 @@ def margin_mse_loss(
     neg_score: torch.Tensor,
 ) -> torch.Tensor:
     s_pos = (q_vec.float() * p_vec.float()).sum(dim=-1)
+    if n_vec.ndim == 3:
+        # [B, K, V] multi-negative Margin-MSE
+        s_neg = (q_vec.float().unsqueeze(1) * n_vec.float()).sum(dim=-1)
+        return F.mse_loss(s_pos.unsqueeze(1) - s_neg, pos_score.float().unsqueeze(1) - neg_score.float())
     s_neg = (q_vec.float() * n_vec.float()).sum(dim=-1)
     return F.mse_loss(s_pos - s_neg, pos_score.float() - neg_score.float())
+
+
+def kl_div_loss(
+    q_vec: torch.Tensor,
+    p_vec: torch.Tensor,
+    n_vec: torch.Tensor,
+    pos_score: torch.Tensor,
+    neg_score: torch.Tensor,
+    temperature: float = 1.0,
+) -> torch.Tensor:
+    """Listwise KL-divergence over (pos, neg_1..neg_K) teacher & student sparse dot-product scores."""
+    s_pos = (q_vec.float() * p_vec.float()).sum(dim=-1, keepdim=True)  # [B, 1]
+    if n_vec.ndim == 3:
+        s_neg = (q_vec.float().unsqueeze(1) * n_vec.float()).sum(dim=-1)  # [B, K]
+        t_neg = neg_score.float()  # [B, K]
+    else:
+        s_neg = (q_vec.float() * n_vec.float()).sum(dim=-1, keepdim=True)  # [B, 1]
+        t_neg = neg_score.float().unsqueeze(-1)  # [B, 1]
+    student_scores = torch.cat([s_pos, s_neg], dim=-1) / temperature
+    teacher_scores = torch.cat([pos_score.float().unsqueeze(-1), t_neg], dim=-1) / temperature
+    return F.kl_div(
+        F.log_softmax(student_scores, dim=-1),
+        F.softmax(teacher_scores, dim=-1),
+        reduction="batchmean",
+    ) * (temperature * temperature)
 
 
 # ---------------------------------------------------------------- dataset
@@ -82,7 +111,8 @@ class TripletJSONLDataset(Dataset):
                 if not line.strip():
                     continue
                 r = json.loads(line)
-                if r.get("query") and r.get("pos") and r.get("neg"):
+                has_neg = bool(r.get("neg")) or (isinstance(r.get("negs"), list) and len(r["negs"]) > 0)
+                if r.get("query") and r.get("pos") and has_neg:
                     self.rows.append(r)
                     if max_examples and len(self.rows) >= max_examples:
                         break
@@ -230,7 +260,9 @@ def main() -> None:
     ap.add_argument("--no-vocab-norm-flops", action="store_true", help="Disable V/30522 vocab-size normalization on FLOPS")
     ap.add_argument("--reg-warmup-steps", type=int, default=2000)
     ap.add_argument("--temperature", type=float, default=1.0)
-    ap.add_argument("--margin-mse-weight", type=float, default=0.0, help="0.0 = v2 (InfoNCE only); >0 = v4 (Margin-MSE distillation)")
+    ap.add_argument("--margin-mse-weight", type=float, default=0.0, help="0.0 = InfoNCE only; >0 = Margin-MSE distillation")
+    ap.add_argument("--kl-weight", type=float, default=0.0, help="Listwise KL-divergence distillation weight over (pos, neg_1..K)")
+    ap.add_argument("--kl-temp", type=float, default=1.0, help="Temperature for listwise KL-div softmax")
     ap.add_argument(
         "--teacher-margin-rms",
         type=float,
@@ -239,6 +271,7 @@ def main() -> None:
     )
     ap.add_argument("--infonce-weight", type=float, default=1.0)
     ap.add_argument("--echo", action="store_true", help="Shortcake only: Echo embeddings (2x input, pool second copy)")
+    ap.add_argument("--no-suffix", action="store_true", help="Shortcake only: disable QUERY_SUFFIX/DOC_SUFFIX prompt markers")
     ap.add_argument("--save-interval", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=42)
     a = ap.parse_args()
@@ -252,24 +285,39 @@ def main() -> None:
     adapter = (
         CroutonAdapter(a.base_checkpoint, tok_path, device)
         if a.arch == "crouton"
-        else ShortcakeAdapter(a.base_checkpoint, tok_path, device, echo=a.echo)
+        else ShortcakeAdapter(a.base_checkpoint, tok_path, device, echo=a.echo, use_suffix=not a.no_suffix)
     )
 
     ds = TripletJSONLDataset(a.triplets, max_examples=a.max_examples)
+    is_multi = isinstance(ds.rows[0].get("negs"), list)
 
-    if a.margin_mse_weight > 0.0 and a.teacher_margin_rms > 0.0:
+    if (a.margin_mse_weight > 0.0 or a.kl_weight > 0.0) and a.teacher_margin_rms > 0.0:
         import math
         by_teacher: dict[str, list[dict[str, Any]]] = {}
         for r in ds.rows:
-            if r.get("pos_score") is not None and r.get("neg_score") is not None:
+            has_scores = (
+                r.get("pos_score") is not None
+                and (r.get("neg_scores") is not None if is_multi else r.get("neg_score") is not None)
+            )
+            if has_scores:
                 by_teacher.setdefault(str(r.get("teacher", "default")), []).append(r)
         for t_name, t_rows in by_teacher.items():
-            rms = math.sqrt(sum((float(r["pos_score"]) - float(r["neg_score"])) ** 2 for r in t_rows) / len(t_rows))
+            sq_margins: list[float] = []
+            for r in t_rows:
+                ps = float(r["pos_score"])
+                if is_multi:
+                    sq_margins.extend((ps - float(ns)) ** 2 for ns in r["neg_scores"])
+                else:
+                    sq_margins.append((ps - float(r["neg_score"])) ** 2)
+            rms = math.sqrt(sum(sq_margins) / max(1, len(sq_margins)))
             if rms > 0.0:
                 scale = a.teacher_margin_rms / rms
                 for r in t_rows:
                     r["pos_score"] = float(r["pos_score"]) * scale
-                    r["neg_score"] = float(r["neg_score"]) * scale
+                    if is_multi:
+                        r["neg_scores"] = [float(ns) * scale for ns in r["neg_scores"]]
+                    else:
+                        r["neg_score"] = float(r["neg_score"]) * scale
                 print(
                     f"Normalized teacher={t_name} ({len(t_rows):,} rows): rms {rms:.2f} -> {a.teacher_margin_rms:.2f} (scale={scale:.5f})",
                     flush=True,
@@ -278,11 +326,26 @@ def main() -> None:
     def collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
         q_ids, q_mask = adapter.encode_batch([b["query"] for b in batch], a.max_query_len, is_query=True)
         p_ids, p_mask = adapter.encode_batch([b["pos"] for b in batch], a.max_doc_len, is_query=False)
+        if is_multi:
+            k = len(batch[0]["negs"])
+            flat_negs = [n for b in batch for n in b["negs"][:k]]
+            n_ids, n_mask = adapter.encode_batch(flat_negs, a.max_doc_len, is_query=False)
+            out: dict[str, Any] = {
+                "q_ids": q_ids, "q_mask": q_mask,
+                "p_ids": p_ids, "p_mask": p_mask,
+                "n_ids": n_ids, "n_mask": n_mask,
+                "num_negs": k,
+            }
+            if all(b.get("pos_score") is not None and b.get("neg_scores") is not None for b in batch):
+                out["pos_score"] = torch.tensor([float(b["pos_score"]) for b in batch], dtype=torch.float32)
+                out["neg_score"] = torch.tensor([[float(x) for x in b["neg_scores"][:k]] for b in batch], dtype=torch.float32)
+            return out
         n_ids, n_mask = adapter.encode_batch([b["neg"] for b in batch], a.max_doc_len, is_query=False)
-        out: dict[str, Any] = {
+        out = {
             "q_ids": q_ids, "q_mask": q_mask,
             "p_ids": p_ids, "p_mask": p_mask,
             "n_ids": n_ids, "n_mask": n_mask,
+            "num_negs": 1,
         }
         if all(b.get("pos_score") is not None and b.get("neg_score") is not None for b in batch):
             out["pos_score"] = torch.tensor([float(b["pos_score"]) for b in batch], dtype=torch.float32)
@@ -331,16 +394,25 @@ def main() -> None:
             with amp_ctx:
                 q_vec, q_flops, q_l1 = adapter.forward(q_ids, q_mask)
                 p_vec, p_flops, _ = adapter.forward(p_ids, p_mask)
-                n_vec, n_flops, _ = adapter.forward(n_ids, n_mask)
+                n_vec_flat, n_flops, _ = adapter.forward(n_ids, n_mask)
+                num_negs = int(batch.get("num_negs", 1))
+                n_vec = n_vec_flat.view(q_vec.size(0), num_negs, -1) if num_negs > 1 else n_vec_flat
 
                 rank = torch.tensor(0.0, device=device)
                 if a.infonce_weight > 0.0:
-                    rank = rank + a.infonce_weight * infonce_loss(q_vec, p_vec, n_vec, temperature=a.temperature)
+                    n_for_nce = n_vec[:, 0, :] if n_vec.ndim == 3 else n_vec
+                    rank = rank + a.infonce_weight * infonce_loss(q_vec, p_vec, n_for_nce, temperature=a.temperature)
                 if a.margin_mse_weight > 0.0 and "pos_score" in batch:
                     mmse = margin_mse_loss(
                         q_vec, p_vec, n_vec, batch["pos_score"].to(device), batch["neg_score"].to(device)
                     )
                     rank = rank + a.margin_mse_weight * mmse
+                if a.kl_weight > 0.0 and "pos_score" in batch:
+                    kld = kl_div_loss(
+                        q_vec, p_vec, n_vec, batch["pos_score"].to(device), batch["neg_score"].to(device),
+                        temperature=a.kl_temp,
+                    )
+                    rank = rank + a.kl_weight * kld
 
                 vocab_scale = 1.0 if a.no_vocab_norm_flops else (float(p_vec.size(-1)) / 30522.0)
                 q_reg = q_l1 if a.query_reg_type == "l1" else (q_flops * vocab_scale)
