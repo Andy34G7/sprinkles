@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v5_ckpts/shortcake_kl/best_splade_model.pt",
+  "task": "coir:stackoverflow-qa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 1994,
+  "n_docs": 19931,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 51.1,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 97.76042346094025,
+  "avg_query_terms": 50.795386158475424,
+  "index_nnz": 1948463,
+  "metrics": {
+    "recall@5": 0.6800401203610833,
+    "recall@10": 0.7352056168505516,
+    "recall@100": 0.8691073219658977,
+    "mrr@10": 0.5978301969400265,
+    "ndcg@10": 0.6307671270348355,
+    "precision@10": 0.07352056168505516
+  },
+  "query_latency_ms_bs1": 18.55,
+  "wall_s": 62.2
+}

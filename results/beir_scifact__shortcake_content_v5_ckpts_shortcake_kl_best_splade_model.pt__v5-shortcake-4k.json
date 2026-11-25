@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v5_ckpts/shortcake_kl/best_splade_model.pt",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 15.0,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 144.68859733744935,
+  "avg_query_terms": 44.276666666666664,
+  "index_nnz": 749921,
+  "metrics": {
+    "recall@5": 0.5109444444444443,
+    "recall@10": 0.6001111111111112,
+    "recall@100": 0.8152222222222222,
+    "mrr@10": 0.4443994708994709,
+    "ndcg@10": 0.4772571646003841,
+    "precision@10": 0.06766666666666665
+  },
+  "query_latency_ms_bs1": 18.33,
+  "wall_s": 20.9
+}

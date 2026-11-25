@@ -1,0 +1,27 @@
+{
+  "model": "crouton:/content/v5_ckpts/crouton_v2_kl/step_2000.pt",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 21.9,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 232.4018717313515,
+  "avg_query_terms": 25.009287925696594,
+  "index_nnz": 844316,
+  "metrics": {
+    "recall@5": 0.08304782531460676,
+    "recall@10": 0.11074329266840566,
+    "recall@100": 0.2350694976292166,
+    "mrr@10": 0.3762052189296772,
+    "ndcg@10": 0.2234734548779272,
+    "precision@10": 0.17275541795665633
+  },
+  "query_latency_ms_bs1": 19.37,
+  "wall_s": 40.2
+}
