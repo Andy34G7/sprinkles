@@ -178,7 +178,15 @@ class CroutonAdapter:
 
 
 class ShortcakeAdapter:
-    def __init__(self, base_ckpt: str, tokenizer_path: Path, device: torch.device, echo: bool = False, use_suffix: bool = True) -> None:
+    def __init__(
+        self,
+        base_ckpt: str,
+        tokenizer_path: Path,
+        device: torch.device,
+        echo: bool = False,
+        use_suffix: bool = True,
+        bidirectional: bool = False,
+    ) -> None:
         sys.path.insert(0, str(SHORTCAKE_DIR))
         from tokenizers import Tokenizer
         from model import Shortcake as Backbone
@@ -192,8 +200,11 @@ class ShortcakeAdapter:
         self.pad_id = 1 if pad is None else pad
         backbone = Backbone(self.config)
         backbone.load_state_dict(ckpt["model_state_dict"])
-        self.model = ShortcakeSPLADE(backbone, tie_lm_head=True, pad_token_id=self.pad_id).to(device)
+        self.model = ShortcakeSPLADE(
+            backbone, tie_lm_head=True, pad_token_id=self.pad_id, bidirectional=bidirectional
+        ).to(device)
         self.echo = echo
+        self.bidirectional = bidirectional
         self.use_suffix = use_suffix
         self.sfx = {True: QUERY_SUFFIX if use_suffix else "", False: DOC_SUFFIX if use_suffix else ""}
 
@@ -232,6 +243,7 @@ class ShortcakeAdapter:
                 "config": self.config,
                 "use_suffix": self.use_suffix,
                 "echo": self.echo,
+                "bidirectional": self.bidirectional,
             },
             path,
         )
@@ -271,6 +283,7 @@ def main() -> None:
     )
     ap.add_argument("--infonce-weight", type=float, default=1.0)
     ap.add_argument("--echo", action="store_true", help="Shortcake only: Echo embeddings (2x input, pool second copy)")
+    ap.add_argument("--bidirectional", action="store_true", help="Shortcake only: BiMamba SSM + bidirectional Attention (1x input)")
     ap.add_argument("--no-suffix", action="store_true", help="Shortcake only: disable QUERY_SUFFIX/DOC_SUFFIX prompt markers")
     ap.add_argument("--save-interval", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=42)
@@ -285,7 +298,9 @@ def main() -> None:
     adapter = (
         CroutonAdapter(a.base_checkpoint, tok_path, device)
         if a.arch == "crouton"
-        else ShortcakeAdapter(a.base_checkpoint, tok_path, device, echo=a.echo, use_suffix=not a.no_suffix)
+        else ShortcakeAdapter(
+            a.base_checkpoint, tok_path, device, echo=a.echo, use_suffix=not a.no_suffix, bidirectional=a.bidirectional
+        )
     )
 
     ds = TripletJSONLDataset(a.triplets, max_examples=a.max_examples)

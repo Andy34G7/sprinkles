@@ -210,7 +210,8 @@ class Shortcake:
         self.tok = Tokenizer.from_file(str(tokenizer_path))
         pad = self.tok.token_to_id("<pad>")
         self.pad = 1 if pad is None else pad
-        self.m = ShortcakeSPLADE(Backbone(c["config"]), tie_lm_head=True, pad_token_id=self.pad)
+        bidirectional = bool(c.get("bidirectional", False))
+        self.m = ShortcakeSPLADE(Backbone(c["config"]), tie_lm_head=True, pad_token_id=self.pad, bidirectional=bidirectional)
         self.m.load_state_dict(c["model_state_dict"])
         self.m.to(device).eval()
         use_suffix = c.get("use_suffix", True)
