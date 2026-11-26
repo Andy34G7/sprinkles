@@ -24,6 +24,9 @@ import torch.nn.functional as F
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from vocab_utils import build_canonical_vocab_map, compute_df_flops_weights, merge_sparse_variants
+
 HOME = Path.home()
 CROUTON_SRC = HOME / "projects/crouton/src"
 DEFAULT_CROUTON_TOK = HOME / "projects/crouton/artifacts/tokenizer/wp_bpe_ppig_32k.json"
@@ -158,6 +161,9 @@ class CroutonAdapter:
         self._save = save_splade_checkpoint
         self.bidirectional = bidirectional
 
+    def tokenize_ids(self, text: str) -> list[int]:
+        return self.tok.encode(self._fmt(text, prefix=" "), split_special_tokens=True)
+
     def encode_batch(self, texts: list[str], max_len: int, is_query: bool) -> tuple[torch.Tensor, torch.Tensor]:
         seqs = []
         for t in texts:
@@ -173,8 +179,12 @@ class CroutonAdapter:
         if steps > 0 and self.bidirectional:
             self._mntp(self.model, loader, device, amp_ctx, steps=steps, lr=lr, mask_token_id=self.pad_id)
 
-    def save(self, path: Path, step: int) -> None:
+    def save(self, path: Path, step: int, extra_meta: dict[str, Any] | None = None) -> None:
         self._save(path, self.model, step)
+        if extra_meta:
+            payload = torch.load(path, map_location="cpu", weights_only=False)
+            payload.update(extra_meta)
+            torch.save(payload, path)
 
 
 class ShortcakeAdapter:
@@ -208,6 +218,9 @@ class ShortcakeAdapter:
         self.use_suffix = use_suffix
         self.sfx = {True: QUERY_SUFFIX if use_suffix else "", False: DOC_SUFFIX if use_suffix else ""}
 
+    def tokenize_ids(self, text: str) -> list[int]:
+        return self.tok.encode(text).ids
+
     def encode_batch(self, texts: list[str], max_len: int, is_query: bool) -> tuple[torch.Tensor, torch.Tensor]:
         sfx = self.sfx[is_query]
         encs = self.tok.encode_batch([t + sfx for t in texts])
@@ -234,19 +247,19 @@ class ShortcakeAdapter:
     def warmup(self, loader: DataLoader, device: torch.device, amp_ctx, steps: int, lr: float) -> None:
         return
 
-    def save(self, path: Path, step: int) -> None:
+    def save(self, path: Path, step: int, extra_meta: dict[str, Any] | None = None) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(
-            {
-                "step": step,
-                "model_state_dict": self.model.state_dict(),
-                "config": self.config,
-                "use_suffix": self.use_suffix,
-                "echo": self.echo,
-                "bidirectional": self.bidirectional,
-            },
-            path,
-        )
+        payload: dict[str, Any] = {
+            "step": step,
+            "model_state_dict": self.model.state_dict(),
+            "config": self.config,
+            "use_suffix": self.use_suffix,
+            "echo": self.echo,
+            "bidirectional": self.bidirectional,
+        }
+        if extra_meta:
+            payload.update(extra_meta)
+        torch.save(payload, path)
 
 
 # ---------------------------------------------------------------- main
@@ -285,6 +298,23 @@ def main() -> None:
     ap.add_argument("--echo", action="store_true", help="Shortcake only: Echo embeddings (2x input, pool second copy)")
     ap.add_argument("--bidirectional", action="store_true", help="Shortcake only: BiMamba SSM + bidirectional Attention (1x input)")
     ap.add_argument("--no-suffix", action="store_true", help="Shortcake only: disable QUERY_SUFFIX/DOC_SUFFIX prompt markers")
+    ap.add_argument(
+        "--init-norm-scale",
+        type=float,
+        default=1.0,
+        help="Rescale SPLADE head pre-decoder RMSNorm weight at init (e.g. 0.1 prevents step-0 logit explosion; arXiv:2606.18811)",
+    )
+    ap.add_argument(
+        "--merge-vocab-variants",
+        action="store_true",
+        help="Max-pool case & leading-space equivalent BPE columns into canonical lowercase terms (SPARSEUP / SIGIR '26)",
+    )
+    ap.add_argument(
+        "--df-flops-alpha",
+        type=float,
+        default=0.0,
+        help="Document-frequency FLOPS exponent (0.0 = standard FLOPS; 0.5 = DF-FLOPS penalizing common terms harder; SIGIR '25)",
+    )
     ap.add_argument("--save-interval", type=int, default=5000)
     ap.add_argument("--seed", type=int, default=42)
     a = ap.parse_args()
@@ -305,6 +335,35 @@ def main() -> None:
 
     ds = TripletJSONLDataset(a.triplets, max_examples=a.max_examples)
     is_multi = isinstance(ds.rows[0].get("negs"), list)
+
+    vocab_size = int(adapter.model.splade_head.vocab_size)
+    if a.init_norm_scale != 1.0:
+        with torch.no_grad():
+            adapter.model.splade_head.norm.weight.mul_(a.init_norm_scale)
+        print(f"Rescaled splade_head.norm.weight by {a.init_norm_scale} at init", flush=True)
+
+    canon_ids: torch.Tensor | None = None
+    num_canon: int | None = None
+    if a.merge_vocab_variants:
+        canon_ids_cpu, num_canon = build_canonical_vocab_map(tok_path, vocab_size=vocab_size)
+        canon_ids = canon_ids_cpu.to(device)
+        print(f"Vocab variant merging enabled: {vocab_size:,} -> {num_canon:,} canonical terms", flush=True)
+
+    df_weights: torch.Tensor | None = None
+    if a.df_flops_alpha > 0.0:
+        df_weights = compute_df_flops_weights(
+            [r["pos"] for r in ds.rows],
+            adapter.tokenize_ids,
+            vocab_size=vocab_size,
+            canon_ids=canon_ids.cpu() if canon_ids is not None else None,
+            num_canon=num_canon,
+            alpha=a.df_flops_alpha,
+        ).to(device)
+        print(
+            f"DF-FLOPS enabled (alpha={a.df_flops_alpha}): "
+            f"min={float(df_weights.min()):.3f} max={float(df_weights.max()):.3f} mean={float(df_weights.mean()):.3f}",
+            flush=True,
+        )
 
     if (a.margin_mse_weight > 0.0 or a.kl_weight > 0.0) and a.teacher_margin_rms > 0.0:
         import math
@@ -410,6 +469,19 @@ def main() -> None:
                 q_vec, q_flops, q_l1 = adapter.forward(q_ids, q_mask)
                 p_vec, p_flops, _ = adapter.forward(p_ids, p_mask)
                 n_vec_flat, n_flops, _ = adapter.forward(n_ids, n_mask)
+                if canon_ids is not None and num_canon is not None:
+                    q_vec = merge_sparse_variants(q_vec, canon_ids, num_canon)
+                    p_vec = merge_sparse_variants(p_vec, canon_ids, num_canon)
+                    n_vec_flat = merge_sparse_variants(n_vec_flat, canon_ids, num_canon)
+                    q_l1 = q_vec.float().sum(dim=-1).mean()
+                if df_weights is not None:
+                    q_flops = (q_vec.float().mean(dim=0).square() * df_weights).sum()
+                    p_flops = (p_vec.float().mean(dim=0).square() * df_weights).sum()
+                    n_flops = (n_vec_flat.float().mean(dim=0).square() * df_weights).sum()
+                elif canon_ids is not None:
+                    q_flops = q_vec.float().mean(dim=0).square().sum()
+                    p_flops = p_vec.float().mean(dim=0).square().sum()
+                    n_flops = n_vec_flat.float().mean(dim=0).square().sum()
                 num_negs = int(batch.get("num_negs", 1))
                 n_vec = n_vec_flat.view(q_vec.size(0), num_negs, -1) if num_negs > 1 else n_vec_flat
 
@@ -452,11 +524,11 @@ def main() -> None:
                 flush=True,
             )
         if a.save_interval > 0 and step > 0 and step % a.save_interval == 0:
-            adapter.save(a.output_dir / f"step_{step}.pt", step)
+            adapter.save(a.output_dir / f"step_{step}.pt", step, extra_meta={"merge_vocab_variants": a.merge_vocab_variants})
 
     final_name = "splade_final.pt" if a.arch == "crouton" else "best_splade_model.pt"
     final_path = a.output_dir / final_name
-    adapter.save(final_path, a.steps)
+    adapter.save(final_path, a.steps, extra_meta={"merge_vocab_variants": a.merge_vocab_variants})
     print(f"Saved final checkpoint -> {final_path} ({(time.time() - t0) / 60:.1f} min)", flush=True)
 
 

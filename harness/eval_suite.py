@@ -184,18 +184,28 @@ class Crouton:
         from crouton.eval.eval_splade import encode_texts_splade, load_splade_model
 
         self.dev = torch.device(device)
+        raw_ckpt = torch.load(os.path.expanduser(ckpt), map_location="cpu", weights_only=False)
+        self.merge_vocab = bool(raw_ckpt.get("merge_vocab_variants", False))
         self.m, _ = load_splade_model(os.path.expanduser(ckpt), device=self.dev)
         self.tok = WpBpePpigTokenizer.from_pretrained(str(tokenizer_path))
+        self.canon_ids = self.num_canon = None
+        if self.merge_vocab:
+            sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "train"))
+            from vocab_utils import build_canonical_vocab_map
+            self.canon_ids, self.num_canon = build_canonical_vocab_map(tokenizer_path, vocab_size=self.m.splade_head.vocab_size)
         self.enc, self.max_len, self.bs = encode_texts_splade, max_len, bs
         self.name, self.params = f"crouton:{ckpt}", sum(p.numel() for p in self.m.parameters())
 
     def encode(self, texts: list[str], is_query: bool) -> sp.csr_matrix:
-        return sp.vstack(
-            [
-                dense_to_csr(self.enc(self.m, self.tok, b, device=self.dev, max_len=self.max_len, batch_size=self.bs))
-                for b in batched(texts, self.bs * 8)
-            ]
-        ).tocsr()
+        if self.merge_vocab:
+            from vocab_utils import merge_sparse_variants
+        out_chunks = []
+        for b in batched(texts, self.bs * 8):
+            sv = self.enc(self.m, self.tok, b, device=self.dev, max_len=self.max_len, batch_size=self.bs)
+            if self.merge_vocab and self.canon_ids is not None and self.num_canon is not None:
+                sv = merge_sparse_variants(sv, self.canon_ids, self.num_canon)
+            out_chunks.append(dense_to_csr(sv))
+        return sp.vstack(out_chunks).tocsr()
 
 
 class Shortcake:
@@ -216,12 +226,20 @@ class Shortcake:
         self.m.to(device).eval()
         use_suffix = c.get("use_suffix", True)
         self.echo = bool(c.get("echo", False))
+        self.merge_vocab = bool(c.get("merge_vocab_variants", False))
+        self.canon_ids = self.num_canon = None
+        if self.merge_vocab:
+            sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "train"))
+            from vocab_utils import build_canonical_vocab_map
+            self.canon_ids, self.num_canon = build_canonical_vocab_map(tokenizer_path, vocab_size=self.m.splade_head.vocab_size)
         self.sfx = {True: QUERY_SUFFIX if use_suffix else "", False: DOC_SUFFIX if use_suffix else ""}
         self.enc, self.dev, self.max_len, self.bs = encode_texts, device, max_len, bs
         self.name, self.params = f"shortcake:{ckpt}", sum(p.numel() for p in self.m.parameters())
 
     @torch.no_grad()
     def encode(self, texts: list[str], is_query: bool) -> sp.csr_matrix:
+        if self.merge_vocab:
+            from vocab_utils import merge_sparse_variants
         rows = []
         for b in batched(texts, self.bs):
             ids, mask = self.enc(self.tok, b, self.max_len, self.pad, suffix=self.sfx[is_query])
@@ -238,7 +256,10 @@ class Shortcake:
                     e_mask[i, n : 2 * n] = True
                 ids, mask = e_ids, e_mask
             with torch.autocast("cuda", dtype=torch.bfloat16, enabled=self.dev == "cuda"):
-                rows.append(dense_to_csr(self.m(ids.to(self.dev), attention_mask=mask.to(self.dev))["sparse_vector"]))
+                sv = self.m(ids.to(self.dev), attention_mask=mask.to(self.dev))["sparse_vector"]
+                if self.merge_vocab and self.canon_ids is not None and self.num_canon is not None:
+                    sv = merge_sparse_variants(sv, self.canon_ids, self.num_canon)
+                rows.append(dense_to_csr(sv))
         return sp.vstack(rows).tocsr()
 
 
