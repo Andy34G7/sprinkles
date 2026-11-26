@@ -1,0 +1,27 @@
+{
+  "model": "crouton:/content/v5d_ckpts/crouton_v2_kl_light/splade_final.pt",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 30.6,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 282.8169014084507,
+  "avg_query_terms": 131.83333333333334,
+  "index_nnz": 1465840,
+  "metrics": {
+    "recall@5": 0.6502777777777777,
+    "recall@10": 0.7279999999999999,
+    "recall@100": 0.8803333333333334,
+    "mrr@10": 0.5345992063492063,
+    "ndcg@10": 0.5781991634491672,
+    "precision@10": 0.08133333333333333
+  },
+  "query_latency_ms_bs1": 20.23,
+  "wall_s": 36.8
+}

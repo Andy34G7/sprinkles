@@ -1,0 +1,27 @@
+{
+  "model": "crouton:/content/v5d_ckpts/crouton_v2_mlm_kl_light/step_2000.pt",
+  "task": "beir:scifact",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 300,
+  "n_docs": 5183,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 31.0,
+  "params": 50940416,
+  "vocab_size": 32768,
+  "avg_doc_terms": 249.9895813235578,
+  "avg_query_terms": 105.86666666666666,
+  "index_nnz": 1295696,
+  "metrics": {
+    "recall@5": 0.5744444444444444,
+    "recall@10": 0.6658333333333334,
+    "recall@100": 0.8536666666666668,
+    "mrr@10": 0.5018399470899471,
+    "ndcg@10": 0.5360161857614946,
+    "precision@10": 0.074
+  },
+  "query_latency_ms_bs1": 20.85,
+  "wall_s": 37.3
+}

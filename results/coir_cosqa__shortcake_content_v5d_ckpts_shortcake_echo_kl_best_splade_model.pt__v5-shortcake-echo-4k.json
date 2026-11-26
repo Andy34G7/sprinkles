@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v5d_ckpts/shortcake_echo_kl/best_splade_model.pt",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 60.8,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 16.103329450592117,
+  "avg_query_terms": 13.978,
+  "index_nnz": 331793,
+  "metrics": {
+    "recall@5": 0.176,
+    "recall@10": 0.262,
+    "recall@100": 0.628,
+    "mrr@10": 0.12935,
+    "ndcg@10": 0.1600083994306644,
+    "precision@10": 0.026200000000000005
+  },
+  "query_latency_ms_bs1": 17.22,
+  "wall_s": 63.4
+}

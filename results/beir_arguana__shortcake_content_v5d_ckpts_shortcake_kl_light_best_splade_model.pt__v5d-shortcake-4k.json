@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v5d_ckpts/shortcake_kl_light/best_splade_model.pt",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 21.7,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 274.40154484666823,
+  "avg_query_terms": 290.51177730192717,
+  "index_nnz": 2380159,
+  "metrics": {
+    "recall@5": 0.3483226266952177,
+    "recall@10": 0.47109207708779444,
+    "recall@100": 0.8322626695217702,
+    "mrr@10": 0.218325912330195,
+    "ndcg@10": 0.2777324901857899,
+    "precision@10": 0.047109207708779445
+  },
+  "query_latency_ms_bs1": 17.85,
+  "wall_s": 33.2
+}

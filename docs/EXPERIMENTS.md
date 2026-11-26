@@ -1,6 +1,6 @@
 # Experiment Log & Findings
 
-Updated: 2026-11-23. All retrieval evaluations use [`harness/eval_suite.py`](../harness/eval_suite.py) on the `core` suite (`beir:arguana`, `beir:nfcorpus`, `beir:scifact`, `coir:cosqa`, `coir:stackoverflow-qa`) at `max_len=256`.
+Updated: 2026-11-26. All retrieval evaluations use [`harness/eval_suite.py`](../harness/eval_suite.py) on the `core` suite (`beir:arguana`, `beir:nfcorpus`, `beir:scifact`, `coir:cosqa`, `coir:stackoverflow-qa`) at `max_len=256`.
 
 ---
 
@@ -110,7 +110,31 @@ Both models trained via [`train/train_splade.py`](../train/train_splade.py) on `
 
 ---
 
-## 6. Tokenizer Investigation (`docs/TOKENISATION.md`)
+## 6. v5 Ablation: BM25 Hard Negatives + Listwise KL-Div + Crouton v2.0.0 + Shortcake `--echo` + Sparsity Sweep
+
+Trained on `78,951` queries × `4` BM25-mined hard negatives (`45,000` MS MARCO scored by `naver/splade-v3` + `13,951` StackOverflow-QA and `20,000` docstring-stripped CodeSearchNet scored by `naver/splade-code-06B`, `max_len=256`, per-teacher RMS normalized to `8.0`), `4,000` steps (`eff_bs=64`), Listwise KL-divergence (`kl_weight=1.0`, `kl_temp=1.0`, `infonce_weight=0.1`). Evaluated at both `2k` and `4k` steps; `4k` checkpoints shown below.
+
+| Model | Recipe (`lq/ld`) | `arguana` | `nfcorpus` | `scifact` | `cosqa` | `stackoverflow-qa` | **General** | **Code** | **Overall** | Avg Doc Terms |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **`shortcake --echo` (v5c-2)** | KL, `0.005/0.008` | **0.3567** | **0.2437** | 0.5568 | 0.1600 | 0.6503 | **0.3857** | 0.4051 | **0.3935** | **105** |
+| **`crouton-v2` (v5b-1)** | KL, `0.005/0.008` | 0.3390 | 0.2153 | **0.5954** | 0.1373 | 0.6656 | 0.3832 | 0.4014 | 0.3905 | 136 |
+| **`crouton-v2-mlm` (v5b-2)** | KL, `0.005/0.008` | 0.3528 | 0.2429 | 0.5592 | 0.1140 | 0.6650 | 0.3850 | 0.3895 | 0.3868 | 139 |
+| `crouton-v2` (v5d-1) | KL, `0.001/0.002` | 0.3286 | 0.2058 | 0.5782 | 0.1279 | **0.6838** | 0.3709 | 0.4058 | 0.3849 | 217 |
+| `crouton-v2-mlm` (v5d-2) | KL, `0.001/0.002` | 0.3299 | 0.2244 | 0.5401 | 0.1260 | 0.6805 | 0.3648 | 0.4033 | 0.3802 | 198 |
+| **`shortcake` causal (v5d-3)** | KL, `0.001/0.002` | 0.2777 | 0.2039 | 0.5028 | **0.1633** | 0.6744 | 0.3282 | **0.4189** | 0.3644 | 200 |
+| `shortcake` causal (v5c-1) | KL, `0.005/0.008` | 0.2725 | 0.1937 | 0.4773 | 0.1147 | 0.6308 | 0.3145 | 0.3727 | 0.3378 | 113 |
+
+### Findings from v5
+1. **BM25 hard negatives + Listwise KL-div produced the largest jump of the project:** Crouton jumped **+0.0860 Overall** (`0.3045 -> 0.3905`, beating `splade-v3` on `so-qa` and beating `ettin-17m` on `scifact` and `nfcorpus` at 10.5x sparser vectors), and causal Shortcake jumped **+0.0712** (`0.2666 -> 0.3378`).
+2. **Shortcake `--echo` completely eliminated Shortcake's General BEIR deficit:** Adding `--echo` on identical data lifted all 5 datasets simultaneously (`+0.0712` General, `+0.0324` Code, **`+0.0557` Overall** to **`0.3935`** at **`105` Avg Doc Terms**, 13.7x sparser than `ettin-17m`).
+3. **131M-token Bidirectional MLM adaptation (`crouton-v2-mlm`) lifted OOD General BEIR and converged faster:** Improved `nfcorpus` (`0.2153 -> 0.2429`) and `arguana` (`0.3390 -> 0.3528`, R@100 `0.9243`) and reached `0.3869` by `step_2000`.
+4. **Sparsity trade-off (`v5d`: `0.001/0.002` vs. `0.005/0.008`):**
+   - Looser sparsity boosted Code across every model (`crouton-v2` `so-qa` hit **`0.6838`**; `shortcake` causal jumped across all 5 tasks to **`0.4189` Code** / `0.3644` Overall, tying BM25's `0.4190` Code avg).
+   - For Crouton, tighter `0.005/0.008` remained better on General BEIR and Overall (`0.3905` vs. `0.3849`) at 1.6x sparser vectors; for 16k Shortcake, `0.001/0.002` improved both General and Code, making `shortcake --echo` at `0.001/0.002` a clear next candidate.
+
+---
+
+## 7. Tokenizer Investigation (`docs/TOKENISATION.md`)
 
 - Word-initial code fragmentation in `crouton` v1.0.0 (`18–20/102` code terms) was caused by training the tokenizer on prose only (`fineweb-edu` + `cosmopedia`), **not** by `wp-bpe-ppig` scoring.
 - Adding 30% Python code to the tokenizer corpus (Experiment E) cut code fragmentation nearly in half (`18 → 10/102`) and boosted code compression by **+20.7%** (`3.448 → 4.159` B/tok) for only a 1.5% prose cost.
@@ -119,6 +143,6 @@ Both models trained via [`train/train_splade.py`](../train/train_splade.py) on `
 
 ---
 
-## 7. Next Steps (`v5`)
+## 8. Next Steps (`v6`)
 
-- **Crouton v2.0.0 Pretraining (`tiny-14m → small-27m → base-50m`):** Pretrain on the cached 2.0B-token 70/30 prose+code shards (`/MyDrive/crouton_v2/data_2b/`), publish as `v2.0.0` release on `Andy34G7/crouton`, then run **v5** SPLADE distillation (with docstring-stripped CSN + harder negatives).
+- **Shortcake `--echo` at `0.001/0.002`** (combining `--echo`'s General lift with `v5d`'s `0.4189` Code lift) and **size-scaling (`v6`)** on `crouton-tiny-14m` & `crouton-small-27m` vs. `ettin-17m` (see [`docs/PLAN.md`](PLAN.md)).
