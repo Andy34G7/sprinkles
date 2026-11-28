@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v6_ckpts/shortcake_bimamba_light/step_2000.pt",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 66.2,
+  "params": 53035904,
+  "vocab_size": 16384,
+  "avg_doc_terms": 63.0094156474471,
+  "avg_query_terms": 38.988,
+  "index_nnz": 1298246,
+  "metrics": {
+    "recall@5": 0.254,
+    "recall@10": 0.378,
+    "recall@100": 0.72,
+    "mrr@10": 0.16661666666666666,
+    "ndcg@10": 0.21549791840143315,
+    "precision@10": 0.0378
+  },
+  "query_latency_ms_bs1": 27.15,
+  "wall_s": 70.5
+}

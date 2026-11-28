@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v6_ckpts/shortcake_bimamba_light/best_splade_model.pt",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 15.4,
+  "params": 53035904,
+  "vocab_size": 16384,
+  "avg_doc_terms": 276.25928984310485,
+  "avg_query_terms": 35.12383900928793,
+  "index_nnz": 1003650,
+  "metrics": {
+    "recall@5": 0.08632119766717265,
+    "recall@10": 0.11306893496490221,
+    "recall@100": 0.23741062701605806,
+    "mrr@10": 0.4097940930758268,
+    "ndcg@10": 0.23711152194279672,
+    "precision@10": 0.17863777089783284
+  },
+  "query_latency_ms_bs1": 26.99,
+  "wall_s": 20.4
+}

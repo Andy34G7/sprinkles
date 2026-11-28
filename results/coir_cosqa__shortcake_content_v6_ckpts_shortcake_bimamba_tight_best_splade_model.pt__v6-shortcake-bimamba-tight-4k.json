@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v6_ckpts/shortcake_bimamba_tight/best_splade_model.pt",
+  "task": "coir:cosqa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 500,
+  "n_docs": 20604,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 66.4,
+  "params": 53035904,
+  "vocab_size": 16384,
+  "avg_doc_terms": 16.854008930304794,
+  "avg_query_terms": 13.564,
+  "index_nnz": 347260,
+  "metrics": {
+    "recall@5": 0.234,
+    "recall@10": 0.318,
+    "recall@100": 0.628,
+    "mrr@10": 0.14261984126984129,
+    "ndcg@10": 0.18359186606804553,
+    "precision@10": 0.0318
+  },
+  "query_latency_ms_bs1": 28.25,
+  "wall_s": 70.5
+}

@@ -1,6 +1,6 @@
 # Experiment Log & Findings
 
-Updated: 2026-11-26. All retrieval evaluations use [`harness/eval_suite.py`](../harness/eval_suite.py) on the `core` suite (`beir:arguana`, `beir:nfcorpus`, `beir:scifact`, `coir:cosqa`, `coir:stackoverflow-qa`) at `max_len=256`.
+Updated: 2026-11-28. All retrieval evaluations use [`harness/eval_suite.py`](../harness/eval_suite.py) on the `core` suite (`beir:arguana`, `beir:nfcorpus`, `beir:scifact`, `coir:cosqa`, `coir:stackoverflow-qa`) at `max_len=256`.
 
 ---
 
@@ -134,15 +134,40 @@ Trained on `78,951` queries × `4` BM25-mined hard negatives (`45,000` MS MARCO 
 
 ---
 
-## 7. Tokenizer Investigation (`docs/TOKENISATION.md`)
+## 7. v6 Ablation: Native ZiG-BiMamba (`--bidirectional`), Echo Light Sparsity, and Crouton Size Scaling (`14M / 27M / 50M`)
+
+Same `78,951` BM25-hard-negative KL dataset and `4,000`-step recipe as v5 (`eff_bs=64`, `kl_weight=1.0`, `infonce_weight=0.1`). Evaluated at `2k` and `4k` steps (`4k` checkpoints below; all 50 JSONs archived in `results/`). Shortcake `--bidirectional` wraps each Mamba mixer with a zero-initialized gated reverse scan (`fwd + gate * rev(mamba(rev(x)))`, +4,608 parameters total, 1x sequence length) alongside unmasked bidirectional attention.
+
+| Model | Params | Recipe (`lq/ld`) | `arguana` | `nfcorpus` | `scifact` | `cosqa` | `stackoverflow-qa` | **General** | **Code** | **Overall** | Avg Q/D | Lat (ms)* |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **`shortcake --bidirectional` (v6-3)** | 53.0M | KL, `0.001/0.002` | **0.3720** | **0.2371** | **0.5779** | 0.2103 | **0.7019** | **0.3956** | 0.4561 | **0.4198** | 85 / 203 | 27.8 |
+| **`shortcake --echo` (v6-1)** | 53.0M | KL, `0.001/0.002` | 0.3445 | 0.2249 | 0.5527 | **0.2166** | 0.6973 | 0.3740 | **0.4570** | 0.4072 | 83 / 198 | 18.4 |
+| **`shortcake --bidirectional` (v6-2)** | 53.0M | KL, `0.005/0.008` | 0.3576 | 0.2352 | 0.5374 | 0.1836 | 0.6600 | 0.3768 | 0.4218 | 0.3948 | **42 / 105** | 28.4 |
+| `shortcake --echo` (v5c-2, ref) | 53.0M | KL, `0.005/0.008` | 0.3567 | 0.2437 | 0.5568 | 0.1600 | 0.6503 | 0.3857 | 0.4051 | 0.3935 | 43 / 105 | — |
+| `crouton-base-50m` v2 (v5b-1, ref) | 50.0M | KL, `0.005/0.008` | 0.3390 | 0.2153 | 0.5954 | 0.1373 | 0.6656 | 0.3832 | 0.4014 | 0.3905 | 66 / 136 | — |
+| **`crouton-small-27m` v2 (v6-5)** | 27.5M | KL, `0.005/0.008` | 0.3244 | 0.0954 | 0.5083 | 0.0588 | 0.5234 | 0.3094 | 0.2911 | 0.3021 | 90 / 163 | 16.8 |
+| **`crouton-tiny-14m` v2 (v6-4)** | 14.3M | KL, `0.005/0.008` | 0.2803 | 0.0901 | 0.4096 | 0.0473 | 0.4600 | 0.2600 | 0.2537 | 0.2575 | 136 / 228 | 13.9 |
+
+*\*Mean batch-1 query latency across the 5 `core` datasets on Colab L4.*
+
+### Findings from v6
+1. **New project record (`0.4198` Overall) with native ZiG-BiMamba (`shortcake --bidirectional`, v6-3):** Beats Echo at identical light sparsity (`0.4072`) by **+0.0126 Overall** and **+0.0216 General** (`arguana 0.3720`, `nfcorpus 0.2371`, `scifact 0.5779`), hits **`0.7019`** on `stackoverflow-qa` (`R@100 0.9122`), and reaches **`0.4561` Code** (beating BM25 `0.4190`, TF-IDF `0.4439`, and `naver/splade-v3` `0.4414`). Compared to `ettin-17m` (`0.4334` Overall at `1534/1434` active terms), `v6-3` wins on 3 of 5 tasks (`nfcorpus`, `scifact`, `cosqa`) while using **7.1x fewer document terms** (`203` vs. `1434`).
+2. **ZiG-BiMamba matches or beats Echo at both sparsity points:** At tight sparsity (`0.005/0.008`), `v6-2` (`0.3948` Overall, `42/105` Q/D, `arguana R@100 0.9286`) edges out `v5c-2` Echo (`0.3935`, `105` D) with a +0.0167 Code lift (`cosqa 0.1836` vs. `0.1600`). At short `max_len=256`, batch-1 latency is faster for single-pass Echo (`18.4 ms`) than two-pass ZiG-BiMamba (`27.8 ms`) because kernel-launch overhead dominates short sequences; on longer documents, ZiG-BiMamba avoids Echo's 2x sequence duplication.
+3. **Echo at light sparsity (`v6-1`, `0.001/0.002`) sets our highest Code average (`0.4570`):** Jumps +0.0519 Code (`cosqa 0.1600 -> 0.2166`, `so-qa 0.6503 -> 0.6973`) and +0.0137 Overall (`0.3935 -> 0.4072`) over tight Echo (`v5c-2`), confirming that Shortcake's 16k vocab benefits from `0.001/0.002` across all adaptation modes.
+4. **Sharp capacity scaling across `crouton` v2.0.0 (`14M -> 27M -> 50M`):** Under identical `0.005/0.008` KL distillation, Overall nDCG@10 climbs from `0.2575` (`14.3M`) to `0.3021` (`27.5M`, +0.0446) to `0.3905` (`50.0M`, +0.0884). Both smaller tiers track lexical tasks reasonably (`scifact 0.4096 -> 0.5083`, `so-qa 0.4600 -> 0.5234`), while out-of-domain biomedical (`nfcorpus ~0.09` vs. `0.2153`) and semantic code (`cosqa ~0.05-0.06` vs. `0.1373`) show a steep threshold between 27M and 50M pretrained capacity.
+
+---
+
+## 8. Tokenizer Investigation (`docs/TOKENISATION.md`)
 
 - Word-initial code fragmentation in `crouton` v1.0.0 (`18–20/102` code terms) was caused by training the tokenizer on prose only (`fineweb-edu` + `cosmopedia`), **not** by `wp-bpe-ppig` scoring.
 - Adding 30% Python code to the tokenizer corpus (Experiment E) cut code fragmentation nearly in half (`18 → 10/102`) and boosted code compression by **+20.7%** (`3.448 → 4.159` B/tok) for only a 1.5% prose cost.
 - Unmodified **`wp-bpe-ppig`** beat `pmi_floor` (negligible difference) and outperformed plain frequency BPE on downstream LM BPB (`2.522` vs. `2.549`), Morph F1, Identifier F1, and Exp E code fragmentation (`10` vs. `11`).
-- Decision: stick with default `wp-bpe-ppig`, retrain the `crouton` v2.0.0 model family (`tiny`, `small`, `base`) on the 70/30 tokenizer, and evaluate those new backbones as **v5**.
+- Decision: stick with default `wp-bpe-ppig`, retrain the `crouton` v2.0.0 model family (`tiny`, `small`, `base`) on the 70/30 tokenizer, and evaluate those new backbones as **v5/v6**.
 
 ---
 
-## 8. Next Steps (`v6`)
+## 9. Next Steps (`v7`)
 
-- **Shortcake `--echo` at `0.001/0.002`** (combining `--echo`'s General lift with `v5d`'s `0.4189` Code lift) and **size-scaling (`v6`)** on `crouton-tiny-14m` & `crouton-small-27m` vs. `ettin-17m` (see [`docs/PLAN.md`](PLAN.md)).
+- Code is landed on `main` (`8597f07`) for `v7` ablations: `--init-norm-scale`, `--merge-vocab-variants` (case/space canonicalization: 25.1% merged on Crouton, 31.5% on Shortcake), and `--df-flops-alpha` (document-frequency weighted FLOPS).
+- Broader validation (`--suite full` on `beir:fiqa` and multi-language `codesearchnet`) and BM25 + SPLADE hybrid (RRF) evaluation on the `v6-3` / `v7` winners (see [`docs/PLAN.md`](PLAN.md)).

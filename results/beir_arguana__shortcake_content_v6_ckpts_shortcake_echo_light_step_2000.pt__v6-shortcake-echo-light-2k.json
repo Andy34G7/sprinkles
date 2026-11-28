@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v6_ckpts/shortcake_echo_light/step_2000.pt",
+  "task": "beir:arguana",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 1401,
+  "n_docs": 8674,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 42.4,
+  "params": 53031296,
+  "vocab_size": 16384,
+  "avg_doc_terms": 369.2578971639382,
+  "avg_query_terms": 291.3490364025696,
+  "index_nnz": 3202943,
+  "metrics": {
+    "recall@5": 0.3804425410421128,
+    "recall@10": 0.5210563882940756,
+    "recall@100": 0.8515346181299072,
+    "mrr@10": 0.2460362779420595,
+    "ndcg@10": 0.310579803016855,
+    "precision@10": 0.052105638829407566
+  },
+  "query_latency_ms_bs1": 19.45,
+  "wall_s": 79.0
+}

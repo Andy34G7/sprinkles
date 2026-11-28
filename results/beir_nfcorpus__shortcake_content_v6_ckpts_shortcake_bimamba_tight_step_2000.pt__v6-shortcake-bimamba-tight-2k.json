@@ -1,0 +1,27 @@
+{
+  "model": "shortcake:/content/v6_ckpts/shortcake_bimamba_tight/step_2000.pt",
+  "task": "beir:nfcorpus",
+  "domain": "general",
+  "split": "test",
+  "n_queries": 323,
+  "n_docs": 3633,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 15.3,
+  "params": 53035904,
+  "vocab_size": 16384,
+  "avg_doc_terms": 213.24029727497935,
+  "avg_query_terms": 20.6656346749226,
+  "index_nnz": 774702,
+  "metrics": {
+    "recall@5": 0.07904305006116086,
+    "recall@10": 0.10499262257940381,
+    "recall@100": 0.21765397772867556,
+    "mrr@10": 0.3751081134208069,
+    "ndcg@10": 0.21427922790329515,
+    "precision@10": 0.16006191950464396
+  },
+  "query_latency_ms_bs1": 27.14,
+  "wall_s": 20.4
+}

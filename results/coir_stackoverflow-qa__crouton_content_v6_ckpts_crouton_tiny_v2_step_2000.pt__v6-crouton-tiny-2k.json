@@ -1,0 +1,27 @@
+{
+  "model": "crouton:/content/v6_ckpts/crouton_tiny_v2/step_2000.pt",
+  "task": "coir:stackoverflow-qa",
+  "domain": "code",
+  "split": "test",
+  "n_queries": 1994,
+  "n_docs": 19931,
+  "max_len": 256,
+  "device": "cuda",
+  "limited": false,
+  "index_build_s": 53.8,
+  "params": 14267904,
+  "vocab_size": 32768,
+  "avg_doc_terms": 135.3499573528674,
+  "avg_query_terms": 105.38615847542629,
+  "index_nnz": 2697660,
+  "metrics": {
+    "recall@5": 0.43329989969909727,
+    "recall@10": 0.49047141424272817,
+    "recall@100": 0.6730190571715146,
+    "mrr@10": 0.35839701644616384,
+    "ndcg@10": 0.38989809179660584,
+    "precision@10": 0.049047141424272814
+  },
+  "query_latency_ms_bs1": 14.83,
+  "wall_s": 65.3
+}
